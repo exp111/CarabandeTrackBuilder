@@ -1,0 +1,62 @@
+<html>
+<head>
+    <title>Carabande</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ocanvas/2.10.1/ocanvas.min.js"></script>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+</body>
+<script>
+    const nobLength = 9;
+    let canvas = oCanvas.create({
+        canvas: "#canvas",
+    });
+    function setCanvasSize(w, h) {
+        canvas.width = w;
+        canvas.height = h;
+        //canvas.redraw();
+    }
+    window.onresize = () => setCanvasSize(window.innerWidth, window.innerHeight);
+    // set it to fullscreen rn
+    setCanvasSize(window.innerWidth, window.innerHeight);
+
+    function dragAndDropHandler() {
+        console.log(this);
+        console.log("end");
+        let objs = this.parent.children;
+        objs.forEach(obj => {
+            if (obj == this)
+                return;
+            console.log(obj);
+            console.log("this:")
+            console.log(this.x);
+            console.log(this.y);
+            console.log("obj:");
+            console.log(obj.x);
+            console.log(obj.y);
+            console.log("obj+size");
+            console.log(obj.x + obj.width);
+            console.log(obj.y + obj.height);
+            if (this.y < (obj.y + obj.height)) {
+                this.moveTo(obj.x, obj.y + obj.height - nobLength * 2);
+            }
+        });
+    }
+    let dragOptions = {end: dragAndDropHandler};
+    // create imgs
+    let straight = canvas.display.image({
+        x: 100,
+        y: 80,
+        image: "assets/straight.png"
+    });
+    canvas.addChild(straight);
+    let start = canvas.display.image({
+        x: 200,
+        y: 80,
+        image: "assets/start.png"
+    });
+    canvas.addChild(start);
+    straight.dragAndDrop(dragOptions);
+    start.dragAndDrop(dragOptions);
+</script>
+</html>
