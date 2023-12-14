@@ -8,41 +8,102 @@
 </body>
 <script>
     const nobLength = 9;
+    const snapZone = 10;
     let canvas = oCanvas.create({
         canvas: "#canvas",
     });
+
     function setCanvasSize(w, h) {
         canvas.width = w;
         canvas.height = h;
         //canvas.redraw();
     }
+
     window.onresize = () => setCanvasSize(window.innerWidth, window.innerHeight);
     // set it to fullscreen rn
     setCanvasSize(window.innerWidth, window.innerHeight);
 
-    function dragAndDropHandler() {
-        console.log(this);
-        console.log("end");
-        let objs = this.parent.children;
+    function snapzoneDrawer(base) {
+        let objs = base.parent.children;
         objs.forEach(obj => {
-            if (obj == this)
+            if (obj == base)
                 return;
-            console.log(obj);
-            console.log("this:")
-            console.log(this.x);
-            console.log(this.y);
-            console.log("obj:");
-            console.log(obj.x);
-            console.log(obj.y);
-            console.log("obj+size");
-            console.log(obj.x + obj.width);
-            console.log(obj.y + obj.height);
-            if (this.y < (obj.y + obj.height)) {
-                this.moveTo(obj.x, obj.y + obj.height - nobLength * 2);
-            }
+            let snapTop = canvas.display.rectangle({
+                x: obj.x - snapZone,
+                y: obj.y - snapZone,
+                width: obj.width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "1px red",
+            });
+            let snapBottom = canvas.display.rectangle({
+                x: obj.x - snapZone,
+                y: obj.y + obj.height - snapZone * 2,
+                width: obj.width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "1px red",
+            });
+            canvas.addChild(snapTop);
+            canvas.addChild(snapBottom);
         });
     }
-    let dragOptions = {end: dragAndDropHandler};
+
+    function snapZoneCleaner(base) {
+        let objs = base.parent.children;
+        let remove = [];
+        objs.forEach(obj => {
+            if (obj == base)
+                return;
+            if (obj.type == "image")
+                return;
+            remove.push(obj);
+        });
+        remove.forEach(r => r.remove());
+    }
+
+    function onDragStart() {
+        snapzoneDrawer(this);
+    }
+
+    function onDragEnd() {
+        snapZoneCleaner(this);
+        snapHandler(this);
+    }
+
+    function snapHandler(base) {
+        // snap handler
+        //TODO: snap toggle
+        console.log(base);
+        let objs = base.parent.children;
+        for (let i in objs) {
+            let obj = objs[i];
+            if (obj == base)
+                continue;
+            if (obj.type != "image")
+                continue; //TODO: remove this? somehow tag objects?
+            console.log(obj);
+            //TODO: check rotations
+            //TODO: stop after snapping once
+            if (base.x >= obj.x - snapZone && base.x <= obj.x + obj.width + snapZone) {
+                // top
+                if (base.y + base.height >= obj.y - snapZone && // top line
+                    base.y + base.height <= obj.y + snapZone * 2) { // bottom line with some extra margin
+                    base.moveTo(obj.x, obj.y - obj.height + nobLength * 2);
+                    break;
+                }
+                // bottom
+                if (base.y >= obj.y + obj.height - snapZone * 2 && // top line, with some extra margin going inside
+                    base.y <= obj.y + obj.height + snapZone) { // bottom line
+                    base.moveTo(obj.x, obj.y + obj.height - nobLength * 2);
+                    break;
+                }
+            }
+        };
+    }
+
+    let dragOptions = {
+        start: onDragStart,
+        end: onDragEnd,
+    };
     // create imgs
     let straight = canvas.display.image({
         x: 100,
