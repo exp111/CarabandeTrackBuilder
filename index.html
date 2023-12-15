@@ -9,9 +9,14 @@
 <script>
     const nobLength = 9;
     const snapZone = 10;
+    let domObject = document.getElementById("canvas");
     let canvas = oCanvas.create({
         canvas: "#canvas",
     });
+    // Disable context menu
+    domObject.oncontextmenu = function (e) {
+        e.preventDefault();
+    };
 
     function setCanvasSize(w, h) {
         canvas.width = w;
@@ -34,6 +39,7 @@
                 width: obj.width + snapZone * 2,
                 height: snapZone * 3,
                 stroke: "1px red",
+                tag: "snapzone"
             });
             let snapBottom = canvas.display.rectangle({
                 x: obj.x - snapZone,
@@ -41,19 +47,22 @@
                 width: obj.width + snapZone * 2,
                 height: snapZone * 3,
                 stroke: "1px red",
+                tag: "snapzone"
             });
+            //TODO: add to obj
             canvas.addChild(snapTop);
             canvas.addChild(snapBottom);
         });
     }
 
     function snapZoneCleaner(base) {
+        //TODO: clean children instead
         let objs = base.parent.children;
         let remove = [];
         objs.forEach(obj => {
             if (obj == base)
                 return;
-            if (obj.type == "image")
+            if (obj.tag != "snapzone")
                 return;
             remove.push(obj);
         });
@@ -78,11 +87,11 @@
             let obj = objs[i];
             if (obj == base)
                 continue;
-            if (obj.type != "image")
-                continue; //TODO: remove this? somehow tag objects?
+            if (obj.tag != "track")
+                continue;
             console.log(obj);
-            //TODO: check rotations
-            //TODO: stop after snapping once
+            //TODO: check if rotation matches
+            //TODO: check collision with snapzone
             if (base.x >= obj.x - snapZone && base.x <= obj.x + obj.width + snapZone) {
                 // top
                 if (base.y + base.height >= obj.y - snapZone && // top line
@@ -101,23 +110,27 @@
     }
 
     let dragOptions = {
-        start: onDragStart,
+        start: onDragStart, //FIXME: dont drag on right click
         end: onDragEnd,
     };
     // create imgs
-    let straight = canvas.display.image({
-        x: 100,
-        y: 80,
-        image: "assets/straight.png"
-    });
-    canvas.addChild(straight);
-    let start = canvas.display.image({
-        x: 200,
-        y: 80,
-        image: "assets/start.png"
-    });
-    canvas.addChild(start);
-    straight.dragAndDrop(dragOptions);
-    start.dragAndDrop(dragOptions);
+    function addTrack(url, x, y) {
+        let track = canvas.display.image({
+            x: x,
+            y: y,
+            image: url,
+            tag: "track"
+        });
+        canvas.addChild(track);
+        track.dragAndDrop(dragOptions);
+        track.bind("click", (e) => {
+            if (e.button != 2)
+                return;
+            track.rotate(45);
+            canvas.redraw();
+        });
+    }
+    addTrack("assets/straight.png", 100, 80);
+    addTrack("assets/start.png", 200, 80);
 </script>
 </html>
