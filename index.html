@@ -140,6 +140,7 @@
             y: y,
             image: url,
             tag: "track",
+            origin: {x: "center", y: "center"}
         });
 
         canvas.addChild(track);
@@ -153,8 +154,8 @@
         // add snapzones
         track.img.onload = () => {
             let snapTop = canvas.display.rectangle({
-                x: -snapZone,
-                y: -snapZone,
+                x: -track.width / 2 - snapZone,
+                y: -track.height / 2 - snapZone,
                 width: track.width + snapZone * 2,
                 height: snapZone * 3,
                 stroke: "1px red",
@@ -162,8 +163,8 @@
                 tag: "snapzone"
             });
             let snapBottom = canvas.display.rectangle({
-                x: -snapZone,
-                y: track.height - snapZone * 2,
+                x: -track.width / 2 - snapZone,
+                y: track.height / 2 - snapZone * 2,
                 width: track.width + snapZone * 2,
                 height: snapZone * 3,
                 stroke: "1px red",
