@@ -30,50 +30,38 @@
 
     function snapzoneDrawer(base) {
         let objs = base.parent.children;
+        // go through all tracks
         objs.forEach(obj => {
-            if (obj == base)
+            /*if (obj == base)
+                return;*/
+            if (obj.tag != "track")
                 return;
-            let snapTop = canvas.display.rectangle({
-                x: -snapZone,
-                y: -snapZone,
-                width: obj.width + snapZone * 2,
-                height: snapZone * 3,
-                stroke: "1px red",
-                tag: "snapzone"
+
+            // then enable all snapzones
+            obj.children.forEach(child => {
+                if (child.tag != "snapzone")
+                    return;
+                child.opacity = 1;
             });
-            let snapBottom = canvas.display.rectangle({
-                x: -snapZone,
-                y: obj.height - snapZone * 2,
-                width: obj.width + snapZone * 2,
-                height: snapZone * 3,
-                stroke: "1px red",
-                tag: "snapzone"
-            });
-            // add as child to maintain rotation
-            obj.addChild(snapTop);
-            obj.addChild(snapBottom);
         });
     }
 
     function snapZoneCleaner(base) {
         let objs = base.parent.children;
-        let remove = [];
         // go through all tracks
         objs.forEach(obj => {
-            if (obj == base)
-                return;
+            /*if (obj == base)
+                return;*/
             if (obj.tag != "track")
                 return;
 
-            // then mark all snapzones
+            // then disable all snapzones
             obj.children.forEach(child => {
                 if (child.tag != "snapzone")
                     return;
-                remove.push(child);
+                child.opacity = 0;
             });
         });
-        // delete all marked ones
-        remove.forEach(r => r.remove());
     }
 
     function onDragStart() {
@@ -83,6 +71,31 @@
     function onDragEnd() {
         snapZoneCleaner(this);
         snapHandler(this);
+    }
+
+    function collidesWith(obj, other) {
+        let x = obj.abs_x;
+        let y = obj.abs_y;
+        let oX = other.abs_x;
+        let oY = other.abs_y;
+        let endX = x + obj.width;
+        let endY = y + obj.height;
+        let oEndX = oX + other.width;
+        let oEndY = oY + other.height;
+        // if rectangle has area 0, no overlap
+        if (x == endX || y == endY || oX == oEndX || oY == oEndY)
+            return false;
+
+        // If one rectangle is on left side of other
+        if (x > oEndX || oX > endX) {
+            return false;
+        }
+
+        // If one rectangle is above other
+        if (y > oEndY || oY > endY) {
+            return false;
+        }
+        return true;
     }
 
     function snapHandler(base) {
@@ -98,20 +111,19 @@
                 continue;
             console.log(obj);
             //TODO: check if rotation matches
-            //TODO: check collision with snapzone
-            if (base.x >= obj.x - snapZone && base.x <= obj.x + obj.width + snapZone) {
-                // top
-                if (base.y + base.height >= obj.y - snapZone && // top line
-                    base.y + base.height <= obj.y + snapZone * 2) { // bottom line with some extra margin
-                    base.moveTo(obj.x, obj.y - obj.height + nobLength * 2);
-                    break;
-                }
-                // bottom
-                if (base.y >= obj.y + obj.height - snapZone * 2 && // top line, with some extra margin going inside
-                    base.y <= obj.y + obj.height + snapZone) { // bottom line
-                    base.moveTo(obj.x, obj.y + obj.height - nobLength * 2);
-                    break;
-                }
+            // top
+            let top = base.children[0];
+            let otherBottom = obj.children[1];
+            if (collidesWith(top, otherBottom)) {
+                base.moveTo(obj.x, obj.y + obj.height - nobLength * 2);
+                break;
+            }
+            // bottom
+            let bottom = base.children[1];
+            let otherTop = obj.children[0];
+            if (collidesWith(bottom, otherTop)) {
+                base.moveTo(obj.x, obj.y - obj.height + nobLength * 2);
+                break;
             }
         }
     }
@@ -127,8 +139,9 @@
             x: x,
             y: y,
             image: url,
-            tag: "track"
+            tag: "track",
         });
+
         canvas.addChild(track);
         track.dragAndDrop(dragOptions);
         track.bind("click", (e) => {
@@ -137,6 +150,30 @@
             track.rotate(45);
             canvas.redraw();
         });
+        // add snapzones
+        track.img.onload = () => {
+            let snapTop = canvas.display.rectangle({
+                x: -snapZone,
+                y: -snapZone,
+                width: track.width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "1px red",
+                opacity: 0,
+                tag: "snapzone"
+            });
+            let snapBottom = canvas.display.rectangle({
+                x: -snapZone,
+                y: track.height - snapZone * 2,
+                width: track.width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "1px red",
+                opacity: 0,
+                tag: "snapzone"
+            });
+            // add as child to maintain rotation
+            track.addChild(snapTop);
+            track.addChild(snapBottom);
+        }
     }
 
     addTrack("assets/straight.png", 100, 80);
