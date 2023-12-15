@@ -56,22 +56,23 @@
     }
 
     function snapZoneCleaner(base) {
-        //TODO: clean children instead
         let objs = base.parent.children;
         let remove = [];
+        // go through all tracks
         objs.forEach(obj => {
             if (obj == base)
                 return;
             if (obj.tag != "track")
                 return;
 
+            // then mark all snapzones
             obj.children.forEach(child => {
                 if (child.tag != "snapzone")
                     return;
                 remove.push(child);
             });
         });
-        console.log(remove.length);
+        // delete all marked ones
         remove.forEach(r => r.remove());
     }
 
