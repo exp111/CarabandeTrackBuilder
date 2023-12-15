@@ -34,24 +34,24 @@
             if (obj == base)
                 return;
             let snapTop = canvas.display.rectangle({
-                x: obj.x - snapZone,
-                y: obj.y - snapZone,
+                x: -snapZone,
+                y: -snapZone,
                 width: obj.width + snapZone * 2,
                 height: snapZone * 3,
                 stroke: "1px red",
                 tag: "snapzone"
             });
             let snapBottom = canvas.display.rectangle({
-                x: obj.x - snapZone,
-                y: obj.y + obj.height - snapZone * 2,
+                x: -snapZone,
+                y: obj.height - snapZone * 2,
                 width: obj.width + snapZone * 2,
                 height: snapZone * 3,
                 stroke: "1px red",
                 tag: "snapzone"
             });
-            //TODO: add to obj
-            canvas.addChild(snapTop);
-            canvas.addChild(snapBottom);
+            // add as child to maintain rotation
+            obj.addChild(snapTop);
+            obj.addChild(snapBottom);
         });
     }
 
@@ -62,10 +62,16 @@
         objs.forEach(obj => {
             if (obj == base)
                 return;
-            if (obj.tag != "snapzone")
+            if (obj.tag != "track")
                 return;
-            remove.push(obj);
+
+            obj.children.forEach(child => {
+                if (child.tag != "snapzone")
+                    return;
+                remove.push(child);
+            });
         });
+        console.log(remove.length);
         remove.forEach(r => r.remove());
     }
 
@@ -113,6 +119,7 @@
         start: onDragStart, //FIXME: dont drag on right click
         end: onDragEnd,
     };
+
     // create imgs
     function addTrack(url, x, y) {
         let track = canvas.display.image({
@@ -130,6 +137,7 @@
             canvas.redraw();
         });
     }
+
     addTrack("assets/straight.png", 100, 80);
     addTrack("assets/start.png", 200, 80);
 </script>
