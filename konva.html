@@ -51,6 +51,21 @@
                     return;
                 group.rotate(45);
             });
+            function toggleSnapzones(val) {
+                layer.getChildren().forEach((group) => {
+                    group.getChildren().forEach((child) => {
+                        if (child.attrs.tag != "snapzone")
+                            return;
+                        child.visible(val);
+                    })
+                })
+            }
+            group.on("dragstart", () => {
+                toggleSnapzones(true);
+            });
+            group.on("dragend", () => {
+                toggleSnapzones(false);
+            });
 
             let snapTop = new Konva.Rect({
                 x: -width / 2 - snapZone,
@@ -59,6 +74,7 @@
                 height: snapZone * 3,
                 stroke: "red",
                 strokeWidth: 1,
+                visible: false,
                 tag: "snapzone"
             });
             group.add(snapTop);
@@ -69,6 +85,7 @@
                 height: snapZone * 3,
                 stroke: "red",
                 strokeWidth: 1,
+                visible: false,
                 tag: "snapzone"
             });
             group.add(snapBottom);
