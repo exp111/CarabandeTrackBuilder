@@ -2,7 +2,8 @@
 <html>
 <head>
     <title>Carabande</title>
-    <script src="https://unpkg.com/konva@9/konva.min.js"></script></head>
+    <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+</head>
 <body>
 <div id="canvas"></div>
 </body>
@@ -14,13 +15,16 @@
         width: window.innerWidth,
         height: window.innerHeight
     });
+    stage.on('contextmenu', function (e) {
+        // prevent default behavior
+        e.evt.preventDefault();
+    });
     var layer = new Konva.Layer();
     stage.add(layer);
 
     function setCanvasSize(w, h) {
         stage.width(w);
         stage.height(h);
-        //canvas.redraw();
     }
 
     // listen to resize
@@ -32,9 +36,17 @@
                 x: x,
                 y: y,
                 tag: "track",
-                draggable: true
+                draggable: true,
+                offsetX: track.width() / 2,
+                offsetY: track.height() / 2,
             });
             layer.add(track);
+
+            track.on("mousedown", (e) => {
+                if (e.evt.button != 2)
+                    return;
+                track.rotate(45);
+            });
         });
     }
 
