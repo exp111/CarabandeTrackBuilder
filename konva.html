@@ -32,21 +32,47 @@
 
     function addTrack(url, x, y) {
         Konva.Image.fromURL(url, function (track) {
-            track.setAttrs({
+            var group = new Konva.Group({
                 x: x,
                 y: y,
-                tag: "track",
                 draggable: true,
-                offsetX: track.width() / 2,
-                offsetY: track.height() / 2,
             });
-            layer.add(track);
+            let width = track.width();
+            let height = track.height();
+            track.setAttrs({
+                tag: "track",
+                offsetX: width / 2,
+                offsetY: height / 2,
+            });
+            group.add(track);
 
-            track.on("mousedown", (e) => {
+            group.on("mousedown", (e) => {
                 if (e.evt.button != 2)
                     return;
-                track.rotate(45);
+                group.rotate(45);
             });
+
+            let snapTop = new Konva.Rect({
+                x: -width / 2 - snapZone,
+                y: -height / 2 - snapZone,
+                width: width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "red",
+                strokeWidth: 1,
+                tag: "snapzone"
+            });
+            group.add(snapTop);
+            let snapBottom = new Konva.Rect({
+                x: -width / 2 - snapZone,
+                y: height / 2 - snapZone * 2,
+                width: width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "red",
+                strokeWidth: 1,
+                tag: "snapzone"
+            });
+            group.add(snapBottom);
+            layer.add(group);
         });
     }
 
