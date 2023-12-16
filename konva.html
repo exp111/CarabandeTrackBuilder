@@ -102,11 +102,11 @@
                 toggleSnapzones(true);
             });
             group.on("dragend", () => {
-                //toggleSnapzones(false);
+                toggleSnapzones(false);
                 //checkSnap(group, snapTop, snapBottom);
             });
 
-            let visible = true;
+            let visible = false;
             switch (type) {
                 case "straight": {
                     let snapTop = new Konva.Rect({
@@ -156,6 +156,22 @@
                         tag: "snapzone"
                     });
                     group.add(snapBottom);
+                    break;
+                }
+                case "rampEnd": //TODO: maybe make the rampEnd hitbox smaller?
+                case "ramp": {
+                    let snapTop = new Konva.Rect({
+                        x: -width / 2 - snapZone,
+                        y: -height / 2 - snapZone,
+                        width: width + snapZone * 2,
+                        height: snapZone * 3,
+                        stroke: "red",
+                        strokeWidth: 1,
+                        visible: visible,
+                        tag: "snapzone"
+                    });
+                    group.add(snapTop);
+                    break;
                 }
             }
             layer.add(group);
