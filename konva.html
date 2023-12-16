@@ -89,13 +89,13 @@
                 let nearestOtherPos = nearestOther.absolutePosition();
                 let posDiff = diff(nearestPos, nearestOtherPos);
                 let groupPos = group.absolutePosition();
-                // then add the nobLength as a directional vector between the two to the diff
+                // then go nobLength times to the other track
                 //TODO: we also need to calculate with group size differences
                 let newPos = {x: groupPos.x + posDiff.x, y: groupPos.y + posDiff.y};
-                let trackPosDiff = diff(newPos, g.absolutePosition());
+                let trackPosDiff = diff(g.absolutePosition(), newPos);
                 trackPosDiff = normalize(trackPosDiff);
-                newPos.x -= trackPosDiff.x * nobLength;
-                newPos.y -= trackPosDiff.y * nobLength;
+                newPos.x += trackPosDiff.x * nobLength;
+                newPos.y += trackPosDiff.y * nobLength;
                 group.position(newPos);
                 break;
             }
