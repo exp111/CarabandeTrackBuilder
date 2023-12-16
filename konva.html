@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Carabande</title>
+    <script src="https://unpkg.com/konva@9/konva.min.js"></script></head>
+<body>
+<div id="canvas"></div>
+</body>
+<script>
+    const nobLength = 9;
+    const snapZone = 10;
+    var stage = new Konva.Stage({
+        container: 'canvas',   // id of container <div>
+        width: window.innerWidth,
+        height: window.innerHeight
+    });
+    var layer = new Konva.Layer();
+    stage.add(layer);
+
+    function setCanvasSize(w, h) {
+        canvas.setWidth(w);
+        canvas.setHeight(h);
+        //canvas.redraw();
+    }
+
+    // listen to resize
+    window.onresize = () => setCanvasSize(window.innerWidth, window.innerHeight);
+
+    function addTrack(url, x, y) {
+        Konva.Image.fromURL(url, function (track) {
+            track.setAttrs({
+                x: x,
+                y: y,
+                tag: "track",
+                draggable: true
+            });
+            layer.add(track);
+        });
+    }
+
+    addTrack("assets/straight.png", 100, 80);
+    addTrack("assets/start.png", 200, 80);
+</script>
+</html>
