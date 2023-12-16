@@ -39,7 +39,44 @@
         );
     }
 
-    function addTrack(url, x, y) {
+    function toggleSnapzones(val) {
+        layer.getChildren().forEach((group) => {
+            group.getChildren().forEach((child) => {
+                if (child.attrs.tag != "snapzone")
+                    return;
+                child.visible(val);
+            })
+        })
+    }
+
+    function checkSnap(group, snapTop, snapBottom) {
+        let topRect = snapTop.getClientRect();
+        let bottomRect = snapBottom.getClientRect();
+        let groups = layer.getChildren();
+        for (let i in groups) {
+            let g = groups[i];
+            // do not check intersection with itself
+            if (g === group)
+                continue;
+            let children = g.getChildren();
+            let otherTrack = children.find(n => n.attrs.tag == "track");
+            let snapzones = children.filter(n => n.attrs.tag == "snapzone");
+            let top = snapzones[0];
+            let bottom = snapzones[1];
+            if (haveIntersection(bottom.getClientRect(), topRect)) {
+                // move ourself
+                group.position({x: g.x(), y: (g.y() + otherTrack.height() - nobLength * 2)});
+                break;
+            }
+            if (haveIntersection(top.getClientRect(), bottomRect)) {
+                // move ourself
+                group.position({x: g.x(), y: (g.y() - otherTrack.height() + nobLength * 2)});
+                break;
+            }
+        }
+    }
+
+    function addTrack(type, url, x, y) {
         Konva.Image.fromURL(url, function (track) {
             var group = new Konva.Group({
                 x: x,
@@ -61,78 +98,74 @@
                 group.rotate(45);
             });
 
-            function toggleSnapzones(val) {
-                layer.getChildren().forEach((group) => {
-                    group.getChildren().forEach((child) => {
-                        if (child.attrs.tag != "snapzone")
-                            return;
-                        child.visible(val);
-                    })
-                })
-            }
-
-            function checkSnap() {
-                let topRect = snapTop.getClientRect();
-                let bottomRect = snapBottom.getClientRect();
-                let groups = layer.getChildren();
-                for (let i in groups) {
-                    let g = groups[i];
-                    // do not check intersection with itself
-                    if (g === group)
-                        continue;
-                    let children = g.getChildren();
-                    let otherTrack = children.find(n => n.attrs.tag == "track");
-                    let snapzones = children.filter(n => n.attrs.tag == "snapzone");
-                    let top = snapzones[0];
-                    let bottom = snapzones[1];
-                    if (haveIntersection(bottom.getClientRect(), topRect)) {
-                        // move ourself
-                        group.position({x: g.x(), y: (g.y() + otherTrack.height() - nobLength * 2)});
-                        break;
-                    }
-                    if (haveIntersection(top.getClientRect(), bottomRect)) {
-                        // move ourself
-                        group.position({x: g.x(), y: (g.y() - otherTrack.height() + nobLength * 2)});
-                        break;
-                    }
-                }
-            }
-
             group.on("dragstart", () => {
                 toggleSnapzones(true);
             });
             group.on("dragend", () => {
-                toggleSnapzones(false);
-                checkSnap();
+                //toggleSnapzones(false);
+                //checkSnap(group, snapTop, snapBottom);
             });
 
-            let snapTop = new Konva.Rect({
-                x: -width / 2 - snapZone,
-                y: -height / 2 - snapZone,
-                width: width + snapZone * 2,
-                height: snapZone * 3,
-                stroke: "red",
-                strokeWidth: 1,
-                visible: false,
-                tag: "snapzone"
-            });
-            group.add(snapTop);
-            let snapBottom = new Konva.Rect({
-                x: -width / 2 - snapZone,
-                y: height / 2 - snapZone * 2,
-                width: width + snapZone * 2,
-                height: snapZone * 3,
-                stroke: "red",
-                strokeWidth: 1,
-                visible: false,
-                tag: "snapzone"
-            });
-            group.add(snapBottom);
+            let visible = true;
+            switch (type) {
+                case "straight": {
+                    let snapTop = new Konva.Rect({
+                        x: -width / 2 - snapZone,
+                        y: -height / 2 - snapZone,
+                        width: width + snapZone * 2,
+                        height: snapZone * 3,
+                        stroke: "red",
+                        strokeWidth: 1,
+                        visible: visible,
+                        tag: "snapzone"
+                    });
+                    group.add(snapTop);
+                    let snapBottom = new Konva.Rect({
+                        x: -width / 2 - snapZone,
+                        y: height / 2 - snapZone * 2,
+                        width: width + snapZone * 2,
+                        height: snapZone * 3,
+                        stroke: "red",
+                        strokeWidth: 1,
+                        visible: visible,
+                        tag: "snapzone"
+                    });
+                    group.add(snapBottom);
+                    break;
+                }
+                case "curve": {
+                    let snapRight = new Konva.Rect({
+                        x: width / 2 - snapZone * 2,
+                        y: -height / 2 - snapZone,
+                        width: snapZone * 3,
+                        height: height,
+                        stroke: "red",
+                        strokeWidth: 1,
+                        visible: visible,
+                        tag: "snapzone"
+                    });
+                    group.add(snapRight);
+                    let snapBottom = new Konva.Rect({
+                        x: -width / 2 - snapZone,
+                        y: height / 2 - snapZone * 2,
+                        width: width,
+                        height: snapZone * 3,
+                        stroke: "red",
+                        strokeWidth: 1,
+                        visible: visible,
+                        tag: "snapzone"
+                    });
+                    group.add(snapBottom);
+                }
+            }
             layer.add(group);
         });
     }
 
-    addTrack("assets/straight.png", 100, 80);
-    addTrack("assets/start.png", 200, 80);
+    addTrack("straight", "assets/straight.png", 100, 80);
+    addTrack("straight", "assets/start.png", 200, 80);
+    addTrack("curve", "assets/curve.png", 300, 80);
+    addTrack("ramp", "assets/ramp.png", 400, 80);
+    addTrack("rampEnd", "assets/rampEnd.png", 500, 80);
 </script>
 </html>
