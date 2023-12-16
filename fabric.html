@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Carabande</title>
+    <script src="https://cdn.jsdelivr.net/npm/fabric"></script>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+</body>
+<script>
+    const canvas = new fabric.Canvas('canvas', {
+        width: window.innerWidth,
+        height: window.innerHeight,
+        stopContextMenu: true,
+        fireRightClick: true,
+    });
+
+    function setCanvasSize(w, h) {
+        canvas.setWidth(w);
+        canvas.setHeight(h);
+        //canvas.redraw();
+    }
+
+    // listen to resize
+    window.onresize = () => setCanvasSize(window.innerWidth, window.innerHeight);
+
+    function addTrack(url, x, y) {
+        fabric.Image.fromURL(url, function (track) {
+            // set pos
+            track.left = x;
+            track.top = y;
+            // set origin
+            track.originX = "center";
+            track.originY = "center";
+            // disable controls
+            track.hasControls = false;
+            track.hasBorders = false;
+            canvas.add(track);
+
+            track.on("mousedown", (e) => {
+                if (e.button != 3)
+                    return;
+                track.rotate(track.angle + 45);
+                canvas.renderAll();
+            });
+        });
+        // add snapzones
+        /*track.img.onload = () => {
+            let snapTop = canvas.display.rectangle({
+                x: -track.width / 2 - snapZone,
+                y: -track.height / 2 - snapZone,
+                width: track.width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "1px red",
+                opacity: 0,
+                tag: "snapzone"
+            });
+            let snapBottom = canvas.display.rectangle({
+                x: -track.width / 2 - snapZone,
+                y: track.height / 2 - snapZone * 2,
+                width: track.width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "1px red",
+                opacity: 0,
+                tag: "snapzone"
+            });
+            // add as child to maintain rotation
+            track.addChild(snapTop);
+            track.addChild(snapBottom);
+        }*/
+    }
+
+    addTrack("assets/straight.png", 100, 80);
+    addTrack("assets/start.png", 200, 80);
+</script>
+</html>

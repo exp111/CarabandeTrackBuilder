@@ -96,6 +96,7 @@
         let o = rotateAround(otherParent, oPoint, oRot);
         let pEnd = rotateAround(parent, end, rot);
         let oEnd = rotateAround(otherParent, otherEnd, oRot);
+        //TODO: if its rotated we still need to check the upper left point instead of the original upper left
         // if rectangle has area 0, no overlap //TODO: remove this check?
         if (p.x == pEnd.x || p.y == pEnd.y || o.x == oEnd.x || o.y == oEnd.y)
             return false;
