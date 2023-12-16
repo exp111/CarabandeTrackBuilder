@@ -30,6 +30,15 @@
     // listen to resize
     window.onresize = () => setCanvasSize(window.innerWidth, window.innerHeight);
 
+    function haveIntersection(r1, r2) {
+        return !(
+            r2.x > r1.x + r1.width ||
+            r2.x + r2.width < r1.x ||
+            r2.y > r1.y + r1.height ||
+            r2.y + r2.height < r1.y
+        );
+    }
+
     function addTrack(url, x, y) {
         Konva.Image.fromURL(url, function (track) {
             var group = new Konva.Group({
@@ -51,6 +60,7 @@
                     return;
                 group.rotate(45);
             });
+
             function toggleSnapzones(val) {
                 layer.getChildren().forEach((group) => {
                     group.getChildren().forEach((child) => {
@@ -60,11 +70,40 @@
                     })
                 })
             }
+
+            function checkSnap() {
+                let topRect = snapTop.getClientRect();
+                let bottomRect = snapBottom.getClientRect();
+                let groups = layer.getChildren();
+                for (let i in groups) {
+                    let g = groups[i];
+                    // do not check intersection with itself
+                    if (g === group)
+                        continue;
+                    let children = g.getChildren();
+                    let otherTrack = children.find(n => n.attrs.tag == "track");
+                    let snapzones = children.filter(n => n.attrs.tag == "snapzone");
+                    let top = snapzones[0];
+                    let bottom = snapzones[1];
+                    if (haveIntersection(bottom.getClientRect(), topRect)) {
+                        // move ourself
+                        group.position({x: g.x(), y: (g.y() + otherTrack.height() - nobLength * 2)});
+                        break;
+                    }
+                    if (haveIntersection(top.getClientRect(), bottomRect)) {
+                        // move ourself
+                        group.position({x: g.x(), y: (g.y() - otherTrack.height() + nobLength * 2)});
+                        break;
+                    }
+                }
+            }
+
             group.on("dragstart", () => {
                 toggleSnapzones(true);
             });
             group.on("dragend", () => {
                 toggleSnapzones(false);
+                checkSnap();
             });
 
             let snapTop = new Konva.Rect({
