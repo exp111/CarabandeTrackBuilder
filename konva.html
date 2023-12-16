@@ -8,7 +8,7 @@
 <div id="canvas"></div>
 </body>
 <script>
-    const nobLength = 9;
+    const nobLength = 8;
     const snapZone = 10;
     var stage = new Konva.Stage({
         container: 'canvas',   // id of container <div>
@@ -94,7 +94,6 @@
                 let newPos = {x: groupPos.x + posDiff.x, y: groupPos.y + posDiff.y};
                 let trackPosDiff = diff(newPos, g.absolutePosition());
                 trackPosDiff = normalize(trackPosDiff);
-                //TODO: one pixel too much?
                 newPos.x -= trackPosDiff.x * nobLength;
                 newPos.y -= trackPosDiff.y * nobLength;
                 group.position(newPos);
