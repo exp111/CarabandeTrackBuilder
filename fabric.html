@@ -8,11 +8,14 @@
 <canvas id="canvas"></canvas>
 </body>
 <script>
+    const nobLength = 9;
+    const snapZone = 10;
     const canvas = new fabric.Canvas('canvas', {
         width: window.innerWidth,
         height: window.innerHeight,
         stopContextMenu: true,
         fireRightClick: true,
+        preserveObjectStacking: true,
     });
 
     function setCanvasSize(w, h) {
@@ -23,6 +26,40 @@
 
     // listen to resize
     window.onresize = () => setCanvasSize(window.innerWidth, window.innerHeight);
+
+    function checkRotation(obj, e) {
+        if (e.button != 3)
+            return;
+        obj.rotate(obj.angle + 45);
+        obj.fire("rotating", {target: obj, angle: obj.angle});
+        canvas.renderAll();
+    }
+
+    function dragStart(e) {
+        if (e.button != 1)
+            return;
+        let objs = canvas.getObjects();
+        // go through all tracks
+        objs.forEach(obj => {
+            if (obj.tag != "snapzone")
+                return;
+
+            obj.visible = true;
+        });
+    }
+
+    function dragEnd(e) {
+        if (e.button != 1)
+            return;
+        let objs = canvas.getObjects();
+        // go through all tracks
+        objs.forEach(obj => {
+            if (obj.tag != "snapzone")
+                return;
+
+            obj.visible = false;
+        });
+    }
 
     function addTrack(url, x, y) {
         fabric.Image.fromURL(url, function (track) {
@@ -35,39 +72,67 @@
             // disable controls
             track.hasControls = false;
             track.hasBorders = false;
+            // tag
+            track.tag = "track";
             canvas.add(track);
 
             track.on("mousedown", (e) => {
-                if (e.button != 3)
-                    return;
-                track.rotate(track.angle + 45);
-                canvas.renderAll();
+                checkRotation(track, e);
+                dragStart(e);
             });
-        });
-        // add snapzones
-        /*track.img.onload = () => {
-            let snapTop = canvas.display.rectangle({
-                x: -track.width / 2 - snapZone,
-                y: -track.height / 2 - snapZone,
+            track.on("mouseup", (e) => {
+                dragEnd(e);
+            });
+
+            // add snapzones
+            let snapTop = new fabric.Rect({
+                left: track.left - track.width / 2 - snapZone,
+                top: track.top - track.height / 2 - snapZone,
                 width: track.width + snapZone * 2,
                 height: snapZone * 3,
-                stroke: "1px red",
-                opacity: 0,
+                fill: false,
+                stroke: "red",
+                strokeWidth: 1,
+                selectable: false,
+                visible: false,
                 tag: "snapzone"
             });
-            let snapBottom = canvas.display.rectangle({
-                x: -track.width / 2 - snapZone,
-                y: track.height / 2 - snapZone * 2,
+            let snapBottom = new fabric.Rect({
+                left: track.left - track.width / 2 - snapZone,
+                top: track.top + track.height / 2 - snapZone * 2,
                 width: track.width + snapZone * 2,
                 height: snapZone * 3,
-                stroke: "1px red",
-                opacity: 0,
+                fill: false,
+                stroke: "red",
+                strokeWidth: 1,
+                selectable: false,
+                visible: false,
                 tag: "snapzone"
+            });
+            track.on("moving", (e) => {
+                var x = e.e.movementX;
+                var y = e.e.movementY;
+                snapTop.left = snapTop.left + x;
+                snapTop.top = snapTop.top + y;
+                snapBottom.left = snapBottom.left + x;
+                snapBottom.top = snapBottom.top + y;
+            });
+            track.on("rotating", (e) => {
+                var origin = new fabric.Point(e.target.left, e.target.top);
+                var angle = fabric.util.degreesToRadians(e.angle);
+                var top = fabric.util.rotatePoint(new fabric.Point(snapTop.left, snapTop.top), origin, angle);
+                var bottom = fabric.util.rotatePoint(new fabric.Point(snapBottom.left, snapBottom.top), origin, angle);
+                snapTop.rotate(e.angle);
+                snapTop.left = top.x;
+                snapTop.top = top.y;
+                snapBottom.rotate(e.angle);
+                snapBottom.left = bottom.x;
+                snapBottom.top = bottom.y;
             });
             // add as child to maintain rotation
-            track.addChild(snapTop);
-            track.addChild(snapBottom);
-        }*/
+            canvas.add(snapTop);
+            canvas.add(snapBottom);
+        });
     }
 
     addTrack("assets/straight.png", 100, 80);
