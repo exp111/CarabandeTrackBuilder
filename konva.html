@@ -49,28 +49,55 @@
         })
     }
 
-    function checkSnap(group, snapTop, snapBottom) {
-        let topRect = snapTop.getClientRect();
-        let bottomRect = snapBottom.getClientRect();
+    function checkSnap(group) {
+        let children = group.getChildren();
+        let track = children.find(n => n.attrs.tag == "track");
+        let pos = track.absolutePosition();
+
+        function dist(a, b) {
+            return Math.sqrt((Math.pow(b.x - a.x, 2)) + (Math.pow(b.y - a.y, 2)));
+        }
+
+        function diff(a, b) {
+            return {x: a.x - b.x, y: a.y - b.y};
+        }
+        function normalize(vec) {
+            let mag = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+            return {x: vec.x / mag, y: vec.y / mag};
+        }
+
+        let snapZones = children.filter(n => n.attrs.tag == "snapzone");
         let groups = layer.getChildren();
         for (let i in groups) {
             let g = groups[i];
             // do not check intersection with itself
             if (g === group)
                 continue;
-            let children = g.getChildren();
-            let otherTrack = children.find(n => n.attrs.tag == "track");
-            let snapzones = children.filter(n => n.attrs.tag == "snapzone");
-            let top = snapzones[0];
-            let bottom = snapzones[1];
-            if (haveIntersection(bottom.getClientRect(), topRect)) {
-                // move ourself
-                group.position({x: g.x(), y: (g.y() + otherTrack.height() - nobLength * 2)});
-                break;
-            }
-            if (haveIntersection(top.getClientRect(), bottomRect)) {
-                // move ourself
-                group.position({x: g.x(), y: (g.y() - otherTrack.height() + nobLength * 2)});
+            // get the other track
+            let otherChildren = g.getChildren();
+            let otherTrack = otherChildren.find(n => n.attrs.tag == "track");
+            let otherZones = otherChildren.filter(n => n.attrs.tag == "snapzone");
+            // find the nearest snapzones
+            //TODO: filter out the ones with not matching rotation
+            let nearest = otherZones.sort((a, b) => dist(a.absolutePosition(), pos) - dist(b.absolutePosition(), pos))[0];
+            let nearestOther = snapZones.sort((a, b) => dist(a.absolutePosition(), otherTrack.absolutePosition()) - dist(b.absolutePosition(), otherTrack.absolutePosition()))[0];
+            if (nearest == null || nearestOther == null)
+                continue;
+            if (haveIntersection(nearest.getClientRect(), nearestOther.getClientRect())) {
+                // first get the pos diff between the two zones
+                let nearestPos = nearest.absolutePosition();
+                let nearestOtherPos = nearestOther.absolutePosition();
+                let posDiff = diff(nearestPos, nearestOtherPos);
+                let groupPos = group.absolutePosition();
+                // then add the nobLength as a directional vector between the two to the diff
+                //TODO: we also need to calculate with group size differences
+                let newPos = {x: groupPos.x + posDiff.x, y: groupPos.y + posDiff.y};
+                let trackPosDiff = diff(newPos, g.absolutePosition());
+                trackPosDiff = normalize(trackPosDiff);
+                //TODO: one pixel too much?
+                newPos.x -= trackPosDiff.x * nobLength;
+                newPos.y -= trackPosDiff.y * nobLength;
+                group.position(newPos);
                 break;
             }
         }
@@ -87,8 +114,7 @@
             let height = track.height();
             track.setAttrs({
                 tag: "track",
-                offsetX: width / 2,
-                offsetY: height / 2,
+                offset: {x: width / 2, y: height / 2},
             });
             group.add(track);
 
@@ -103,21 +129,23 @@
             });
             group.on("dragend", () => {
                 toggleSnapzones(false);
-                //checkSnap(group, snapTop, snapBottom);
+                checkSnap(group);
             });
 
             function createSnapzone(x, y, w, h) {
                 return new Konva.Rect({
-                    x: x,
-                    y: y,
+                    x: x + w / 2,
+                    y: y + h / 2,
                     width: w,
                     height: h,
                     stroke: "red",
                     strokeWidth: 1,
                     visible: false,
-                    tag: "snapzone"
+                    tag: "snapzone",
+                    offset: {x: w / 2, y: h / 2},
                 });
             }
+
             switch (type) {
                 case "straight": {
                     let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
