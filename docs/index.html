@@ -121,7 +121,6 @@
                 let posDiff = diff(nearestPos, nearestOtherPos);
                 let groupPos = group.absolutePosition();
                 // then go nobLength times to the other track
-                //TODO: we also need to calculate with group size differences
                 let newPos = {x: groupPos.x + posDiff.x, y: groupPos.y + posDiff.y};
                 let trackPosDiff = diff(g.absolutePosition(), newPos);
                 trackPosDiff = normalize(trackPosDiff);
@@ -133,7 +132,7 @@
         }
     }
 
-    function addTrack(type, url, x, y) {
+    function addTrack(type, url, x, y, i) {
         Konva.Image.fromURL(url, function (track) {
             var group = new Konva.Group({
                 x: x,
@@ -202,6 +201,7 @@
                 }
             }
             layer.add(group);
+            tiles[i] = group;
         });
     }
 
@@ -209,6 +209,7 @@
     let presetRect = {x1: 50, y1: 100, x2: 150, y2: 500};
     let tilesPerRow = 3;
     let tilesAdded = 0;
+    let tiles = [];
 
     function addPreset(track) {
         let url = `assets/${track}.png`;
@@ -221,8 +222,8 @@
         }
         let x = tilesAdded % tilesPerRow * (presetRect.x2 - presetRect.x1 / tilesPerRow) + presetRect.x1;
         let y = Math.floor(tilesAdded / tilesPerRow) * 100 + presetRect.y1;
+        addTrack(type, url, x, y, tilesAdded);
         tilesAdded++;
-        addTrack(type, url, x, y);
     }
 
     addPreset("start");
