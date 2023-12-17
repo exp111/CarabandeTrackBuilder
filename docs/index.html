@@ -8,16 +8,23 @@
 <div id="debug">
     <input id="forceShowSnapzones" type="checkbox" value="false" onchange="forceShowSnapzones(this.checked)">
     <label for="forceShowSnapzones">Show Snapzones</label>
+</div>
+<div id="menu">
     <input id="disableSnapping" type="checkbox" value="false" onchange="Global.disableSnapping = this.checked">
     <label for="disableSnapping">Disable Snapping</label>
+    <select id="tracks" onchange="onTrackChange(this.value)"></select>
 </div>
 <div id="canvas"></div>
 </body>
+<script src="js/vector.js"></script>
+<script src="js/main.js"></script>
+<script src="js/trackbuilder.js"></script>
 <script>
     const Global = {
         forceShowSnapzones: false,
         disableSnapping: false,
         IsDebug: window.location.protocol == "file:" || window.location.hostname == "localhost",
+        trackbuilder: new Trackbuilder(tracks),
     }
     debug.hidden = !Global.IsDebug;
     Global.forceShowSnapzones = Global.IsDebug;
@@ -26,7 +33,10 @@
         Global.forceShowSnapzones = val;
         toggleSnapzones(val);
     }
+    function onTrackChange(val) {
+        Global.trackbuilder.onTrackSelect(val);
+    }
+    createCanvas();
+    initPresets();
 </script>
-<script src="js/main.js"></script>
-<script src="js/trackbuilder.js"></script>
 </html>

@@ -1,27 +1,30 @@
 const nobLength = 7;
 const snapZone = 10;
-var stage = new Konva.Stage({
-    container: 'canvas',   // id of container <div>
-});
-stage.on('contextmenu', function (e) {
-    // prevent default behavior
-    e.evt.preventDefault();
-});
-var layer = new Konva.Layer();
-stage.add(layer);
 
-function setCanvasSize() {
-    stage.width(window.innerWidth);
-    let height = window.innerHeight;
-    if (Global.IsDebug)
-        height -= 25;
-    stage.height(height);
+function createCanvas() {
+    Global.stage = new Konva.Stage({
+        container: 'canvas',   // id of container <div>
+    });
+    Global.stage.on('contextmenu', function (e) {
+        // prevent default behavior
+        e.evt.preventDefault();
+    });
+    Global.layer = new Konva.Layer();
+    Global.stage.add(Global.layer);
+
+    function setCanvasSize() {
+        Global.stage.width(window.innerWidth);
+        let height = window.innerHeight;
+        if (Global.IsDebug)
+            height -= 25;
+        Global.stage.height(height);
+    }
+
+    // listen to resize
+    window.onresize = () => setCanvasSize();
+    // set size
+    setCanvasSize();
 }
-
-// listen to resize
-window.onresize = () => setCanvasSize();
-// set size
-setCanvasSize();
 
 function haveIntersection(r1, r2) {
     return !(
@@ -32,38 +35,23 @@ function haveIntersection(r1, r2) {
     );
 }
 
-function dist(a, b) {
-    return Math.sqrt((Math.pow(b.x - a.x, 2)) + (Math.pow(b.y - a.y, 2)));
-}
-
-function diff(a, b) {
-    return {x: a.x - b.x, y: a.y - b.y};
-}
-
-function normalize(vec) {
-    let mag = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-    if (mag == 0)
-        return vec;
-    return {x: vec.x / mag, y: vec.y / mag};
-}
-
 function moveGroupToSnapzone(group, otherGroup, zone, otherZone) {
     // first get the pos diff between the two zones
     let nearestPos = otherZone.absolutePosition();
     let nearestOtherPos = zone.absolutePosition();
-    let posDiff = diff(nearestPos, nearestOtherPos);
+    let posDiff = Vector.diff(nearestPos, nearestOtherPos);
     let groupPos = group.absolutePosition();
     // then go nobLength times to the other track
     let newPos = {x: groupPos.x + posDiff.x, y: groupPos.y + posDiff.y};
-    let trackPosDiff = diff(otherGroup.absolutePosition(), newPos);
-    trackPosDiff = normalize(trackPosDiff);
+    let trackPosDiff = Vector.diff(otherGroup.absolutePosition(), newPos);
+    trackPosDiff = Vector.normalize(trackPosDiff);
     newPos.x += trackPosDiff.x * nobLength;
     newPos.y += trackPosDiff.y * nobLength;
     group.position(newPos);
 }
 
 function toggleSnapzones(val) {
-    layer.getChildren().forEach((group) => {
+    Global.layer.getChildren().forEach((group) => {
         group.getChildren().forEach((child) => {
             if (child.attrs.tag != "snapzone")
                 return;
@@ -81,7 +69,7 @@ function checkSnap(group) {
 
     let snapZones = children.filter(n => n.attrs.tag == "snapzone");
     //first filter out the current group, then sort by distance
-    let groups = layer.getChildren().filter(g => g != group).sort((a, b) => dist(a.absolutePosition(), pos) - dist(b.absolutePosition(), pos));
+    let groups = Global.layer.getChildren().filter(g => g != group).sort((a, b) => Vector.dist(a.absolutePosition(), pos) - Vector.dist(b.absolutePosition(), pos));
     for (let i in groups) {
         let g = groups[i];
         // get the other track
@@ -89,8 +77,8 @@ function checkSnap(group) {
         let otherTrack = otherChildren.find(n => n.attrs.tag == "track");
         let otherZones = otherChildren.filter(n => n.attrs.tag == "snapzone");
         // find the nearest snapzones
-        let nearest = otherZones.sort((a, b) => dist(a.absolutePosition(), pos) - dist(b.absolutePosition(), pos))[0];
-        let nearestOther = snapZones.sort((a, b) => dist(a.absolutePosition(), otherTrack.absolutePosition()) - dist(b.absolutePosition(), otherTrack.absolutePosition()))[0];
+        let nearest = otherZones.sort((a, b) => Vector.dist(a.absolutePosition(), pos) - Vector.dist(b.absolutePosition(), pos))[0];
+        let nearestOther = snapZones.sort((a, b) => Vector.dist(a.absolutePosition(), otherTrack.absolutePosition()) - Vector.dist(b.absolutePosition(), otherTrack.absolutePosition()))[0];
         if (nearest == null || nearestOther == null)
             continue;
         // check the rotation
@@ -186,42 +174,43 @@ function addTrack(type, url, x, y, i) {
                     break;
                 }
             }
-            layer.add(group);
-            tiles[i] = group;
+            Global.layer.add(group);
+            Global.tiles[i] = group;
             resolve();
         });
     });
     return promise;
 }
 
+
 //TODO: add a seperation between normal/addon tiles?
-let presetRect = {x1: 50, y1: 100, x2: 150, y2: 500};
-let tilesPerRow = 3;
-let tilesAdded = 0;
-let tiles = [];
+const presetRect = {x1: 50, y1: 100, x2: 150, y2: 500};
+const tilesPerRow = 3;
 
-function addPreset(track) {
-    let url = `assets/${track}.png`;
-    let x = tilesAdded % tilesPerRow * (presetRect.x2 - presetRect.x1 / tilesPerRow) + presetRect.x1;
-    let y = Math.floor(tilesAdded / tilesPerRow) * 100 + presetRect.y1;
-    let ret = addTrack(track, url, x, y, tilesAdded);
-    tilesAdded++;
-    return ret;
-}
+function initPresets() {
+    let tilesAdded = 0;
+    Global.tiles = [];
 
-let promises = [];
-promises.push(addPreset("start"));
-for (let i = 0; i < 5; i++) {
-    promises.push(addPreset("straight"));
-}
-for (let i = 0; i < 12; i++) {
-    promises.push(addPreset("curve"));
-}
-promises.push(addPreset("ramp"));
-promises.push(addPreset("rampEnd"));
-promises.push(addPreset("xstraight"));
-promises.push(addPreset("ystraight"));
+    function addPreset(track) {
+        let url = `assets/${track}.png`;
+        let x = tilesAdded % tilesPerRow * (presetRect.x2 - presetRect.x1 / tilesPerRow) + presetRect.x1;
+        let y = Math.floor(tilesAdded / tilesPerRow) * 100 + presetRect.y1;
+        let ret = addTrack(track, url, x, y, tilesAdded);
+        tilesAdded++;
+        return ret;
+    }
 
-Promise.all(promises).then(() => {
-    //do stuff here
-});
+    let promises = [];
+    promises.push(addPreset("start"));
+    for (let i = 0; i < 5; i++) {
+        promises.push(addPreset("straight"));
+    }
+    for (let i = 0; i < 12; i++) {
+        promises.push(addPreset("curve"));
+    }
+    promises.push(addPreset("ramp"));
+    promises.push(addPreset("rampEnd"));
+    promises.push(addPreset("xstraight"));
+    promises.push(addPreset("ystraight"));
+    return promises;
+}
