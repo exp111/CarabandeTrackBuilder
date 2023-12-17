@@ -44,6 +44,7 @@
         Global.disableSnapping = val;
     }
     function onTrackChange(val) {
+        clearTracks();
         Global.trackbuilder.onTrackSelect(val);
     }
     function clearButton() {
