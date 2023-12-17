@@ -36,7 +36,7 @@ class Trackbuilder {
         name: "Jump",
         tiles: [
             new Tile("rampEnd", 270),
-            new Tile("straight", 450),
+            new Tile("straight", 90),
             new Tile("curve", 270),
             new Tile("curve", 0),
             new Tile("start", 90),

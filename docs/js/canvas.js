@@ -26,6 +26,10 @@ function createCanvas() {
     setCanvasSize();
 }
 
+function isInside(r1, p) {
+    return (p.x >= r1.x && p.x <= r1.x + r1.width) &&
+        (p.y >= r1.y && p.y <= r1.y + r1.height);
+}
 function haveIntersection(r1, r2) {
     return !(
         r2.x > r1.x + r1.width ||
@@ -51,7 +55,25 @@ function moveGroupToSnapzone(group, otherGroup, zone, otherZone) {
     // mark snapzone as used so we cant double use a snap
     zone.attrs.snap = otherZone;
     otherZone.attrs.snap = zone;
-    //TODO: wed also need to check if the other side can be snapped too (example: 3 pieces, middle one is replaced)
+    // wed need to check if the other side can be snapped too (example: 3 pieces, middle one is replaced)
+    let ourOtherZone = group.children.find(c => c.attrs.tag == "snapzone" && c != zone);
+    // first check if we have another snapzone
+    if (ourOtherZone != null) {
+        // then check every other group
+        let otherTiles = Global.layer.children.filter(g => g != group && g != otherGroup);
+        let zonePos = ourOtherZone.absolutePosition();
+        for (let i in otherTiles) {
+            let otherTile = otherTiles[i];
+            // check if there is a snapzone that isnt snapped and contains our other snapzone origin
+            let found = otherTile.children.find(z => z.attrs.tag == "snapzone" && z.attrs.snap == null && isInside(z.getClientRect(), zonePos));
+            if (found) {
+                // mark that one too
+                found.attrs.snap = ourOtherZone;
+                ourOtherZone.attrs.snap = found;
+                break;
+            }
+        }
+    }
 }
 
 function toggleSnapzones(val) {
