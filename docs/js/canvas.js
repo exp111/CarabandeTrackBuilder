@@ -48,6 +48,10 @@ function moveGroupToSnapzone(group, otherGroup, zone, otherZone) {
     newPos.x += trackPosDiff.x * nobLength;
     newPos.y += trackPosDiff.y * nobLength;
     group.position(newPos);
+    // mark snapzone as used so we cant double use a snap
+    zone.attrs.snap = otherZone;
+    otherZone.attrs.snap = zone;
+    //TODO: wed also need to check if the other side can be snapped too (example: 3 pieces, middle one is replaced)
 }
 
 function toggleSnapzones(val) {
@@ -58,6 +62,17 @@ function toggleSnapzones(val) {
             child.visible(val);
         })
     })
+}
+
+function removeSnap(group) {
+    let zones = group.children.filter(c => c.attrs.tag == "snapzone" && c.attrs.snap != null);
+    for (let i in zones) {
+        let zone = zones[i];
+        let other = zone.attrs.snap;
+        // remove the snap
+        zone.attrs.snap = null;
+        other.attrs.snap = null;
+    }
 }
 
 function checkSnap(group) {
@@ -75,7 +90,8 @@ function checkSnap(group) {
         // get the other track
         let otherChildren = g.getChildren();
         let otherTrack = otherChildren.find(n => n.attrs.tag == "track");
-        let otherZones = otherChildren.filter(n => n.attrs.tag == "snapzone");
+        // filter out zones that are already snapped
+        let otherZones = otherChildren.filter(n => n.attrs.tag == "snapzone" && n.attrs.snap == null);
         // find the nearest snapzones
         let nearest = otherZones.sort((a, b) => Vector.dist(a.absolutePosition(), pos) - Vector.dist(b.absolutePosition(), pos))[0];
         let nearestOther = snapZones.sort((a, b) => Vector.dist(a.absolutePosition(), otherTrack.absolutePosition()) - Vector.dist(b.absolutePosition(), otherTrack.absolutePosition()))[0];
@@ -89,8 +105,8 @@ function checkSnap(group) {
         nearestOtherRot = Math.round((nearestOtherRot + 180) % 180);
         if (nearestRot != nearestOtherRot)
             continue;
+        //TODO: disallow overlaying snaps
         if (haveIntersection(nearest.getClientRect(), nearestOther.getClientRect())) {
-            //TODO: mark snapzone as used so we cant double use a snap
             moveGroupToSnapzone(group, g, nearestOther, nearest);
             break;
         }
@@ -124,6 +140,7 @@ function addTrack(type, url, x, y, index) {
             group.on("dragstart", () => {
                 if (!Global.forceShowSnapzones)
                     toggleSnapzones(true);
+                removeSnap(group);
             });
             group.on("dragend", () => {
                 if (!Global.forceShowSnapzones)
@@ -224,6 +241,7 @@ function clearTracks() {
         let y = Math.floor(tilesAdded / tilesPerRow) * 100 + presetRect.y1;
         tile.rotation(0);
         tile.position(new Vector(x, y));
+        tile.children.filter(c => c.attrs.tag == "snapzone").forEach(z => z.attrs.snap = null);
         tilesAdded++;
     }
 }

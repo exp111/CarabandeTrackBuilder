@@ -32,6 +32,22 @@ class Trackbuilder {
             new Tile("curve", 270),
             new Tile("straight", 90),
         ]
+    }, {
+        name: "Jump",
+        tiles: [
+            new Tile("rampEnd", 270),
+            new Tile("straight", 450),
+            new Tile("curve", 270),
+            new Tile("curve", 0),
+            new Tile("start", 90),
+            new Tile("curve", 90),
+            new Tile("straight", 0),
+            new Tile("curve", 270),
+            new Tile("straight", 90),
+            new Tile("curve", 180),
+            new Tile("curve", 90),
+            new Tile("ramp", 90),
+        ]
     }];
 
     constructor(select) {
@@ -112,23 +128,13 @@ class Trackbuilder {
         let start = Global.tiles.find(t => t.attrs.type == "start");
 
         function getNextTile(tile) {
-            // to get the next tile we first look at all tiles starting with the closest one
-            let pos = start.absolutePosition();
-            let next = Global.tiles.filter(t => t != tile && !tiles.includes(t)).sort((a, b) => Vector.dist(a.absolutePosition(), pos) - Vector.dist(b.absolutePosition(), pos));
-            for (let i in next) {
-                let t = next[i];
-                let tPos = t.absolutePosition();
-                // then we get our closest snapzone to that tile
-                let nearest = tile.children.filter(c => c.attrs.tag == "snapzone").sort((a, b) => Vector.dist(a.absolutePosition(), tPos) - Vector.dist(b.absolutePosition(), tPos))[0];
-                let rect = nearest.getClientRect();
-                let zones = t.children.filter(c => c.attrs.tag == "snapzone");
-                // then we check for each snapzone of that tile if it intersects with ours
-                for (let j in zones) {
-                    let zone = zones[j];
-                    if (haveIntersection(zone.getClientRect(), rect)) {
-                        return t;
-                    }
-                }
+            let zones = tile.children.filter(t => t.attrs.tag == "snapzone" && t.attrs.snap != null);
+            for (let i in zones) {
+                let zone = zones[i];
+                let other = zone.attrs.snap.parent;
+                if (tiles.includes(other))
+                    continue;
+                return other;
             }
             return null;
         }
