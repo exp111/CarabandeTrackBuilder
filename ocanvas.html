@@ -1,0 +1,199 @@
+<html>
+<head>
+    <title>Carabande</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ocanvas/2.10.1/ocanvas.min.js"></script>
+</head>
+<body>
+<canvas id="canvas"></canvas>
+</body>
+<script>
+    const nobLength = 9;
+    const snapZone = 10;
+    let domObject = document.getElementById("canvas");
+    let canvas = oCanvas.create({
+        canvas: "#canvas",
+    });
+    // Disable context menu
+    domObject.oncontextmenu = function (e) {
+        e.preventDefault();
+    };
+
+    function setCanvasSize(w, h) {
+        canvas.width = w;
+        canvas.height = h;
+        //canvas.redraw();
+    }
+
+    window.onresize = () => setCanvasSize(window.innerWidth, window.innerHeight);
+    // set it to fullscreen rn
+    setCanvasSize(window.innerWidth, window.innerHeight);
+
+    function snapzoneDrawer(base) {
+        let objs = base.parent.children;
+        // go through all tracks
+        objs.forEach(obj => {
+            /*if (obj == base)
+                return;*/
+            if (obj.tag != "track")
+                return;
+
+            // then enable all snapzones
+            obj.children.forEach(child => {
+                if (child.tag != "snapzone")
+                    return;
+                child.opacity = 1;
+            });
+        });
+    }
+
+    function snapZoneCleaner(base) {
+        let objs = base.parent.children;
+        // go through all tracks
+        objs.forEach(obj => {
+            /*if (obj == base)
+                return;*/
+            if (obj.tag != "track")
+                return;
+
+            // then disable all snapzones
+            obj.children.forEach(child => {
+                if (child.tag != "snapzone")
+                    return;
+                child.opacity = 0;
+            });
+        });
+    }
+
+    function onDragStart() {
+        snapzoneDrawer(this);
+    }
+
+    function onDragEnd() {
+        snapZoneCleaner(this);
+        snapHandler(this);
+    }
+
+    function degrees_to_radians(degrees)
+    {
+        var pi = Math.PI;
+        return degrees * (pi/180);
+    }
+
+    function rotateAround(origin, point, angle) {
+        qx = origin.x + Math.cos(angle) * (point.x - origin.x) - Math.sin(angle) * (point.y - origin.y);
+        qy = origin.y + Math.sin(angle) * (point.x - origin.x) + Math.cos(angle) * (point.y - origin.y);
+        return {x: qx, y: qy};
+    }
+
+    function collidesWith(parent, obj, otherParent, other) {
+        let rot = degrees_to_radians(parent.rotation);
+        let oRot = degrees_to_radians(otherParent.rotation);
+        let point = {x: obj.abs_x, y: obj.abs_y};
+        let end = {x: obj.abs_x + obj.width, y: obj.abs_y + obj.height};
+        let oPoint = {x: other.abs_x, y: other.abs_y};
+        let otherEnd = {x: other.abs_x + other.width, y: other.abs_y + other.height};
+        let p = rotateAround(parent, point, rot);
+        let o = rotateAround(otherParent, oPoint, oRot);
+        let pEnd = rotateAround(parent, end, rot);
+        let oEnd = rotateAround(otherParent, otherEnd, oRot);
+        //TODO: if its rotated we still need to check the upper left point instead of the original upper left
+        // if rectangle has area 0, no overlap //TODO: remove this check?
+        if (p.x == pEnd.x || p.y == pEnd.y || o.x == oEnd.x || o.y == oEnd.y)
+            return false;
+
+        // If one rectangle is on left side of other
+        if (p.x > oEnd.x || o.x > pEnd.x) {
+            return false;
+        }
+
+        // If one rectangle is above other
+        if (p.y > oEnd.y || o.y > pEnd.y) {
+            return false;
+        }
+        return true;
+    }
+
+    function snapHandler(base) {
+        // snap handler
+        //TODO: snap toggle
+        console.log(base);
+        let objs = base.parent.children;
+        for (let i in objs) {
+            let obj = objs[i];
+            if (obj == base)
+                continue;
+            if (obj.tag != "track")
+                continue;
+            console.log(obj);
+            //TODO: check if rotation matches
+            //TODO: instead use a smaller snapzone on the dragged track?
+            // top
+            let top = base.children[0];
+            let otherBottom = obj.children[1];
+            if (collidesWith(base, top, obj, otherBottom)) {
+                base.moveTo(obj.x, obj.y + obj.height - nobLength * 2);
+                break;
+            }
+            // bottom
+            let bottom = base.children[1];
+            let otherTop = obj.children[0];
+            if (collidesWith(base, bottom, obj, otherTop)) {
+                base.moveTo(obj.x, obj.y - obj.height + nobLength * 2);
+                break;
+            }
+        }
+    }
+
+    let dragOptions = {
+        start: onDragStart, //FIXME: dont drag on right click
+        end: onDragEnd,
+    };
+
+    // create imgs
+    function addTrack(url, x, y) {
+        let track = canvas.display.image({
+            x: x,
+            y: y,
+            image: url,
+            tag: "track",
+            origin: {x: "center", y: "center"}
+        });
+
+        canvas.addChild(track);
+        track.dragAndDrop(dragOptions);
+        track.bind("click", (e) => {
+            if (e.button != 2)
+                return;
+            track.rotate(45);
+            canvas.redraw();
+        });
+        // add snapzones
+        track.img.onload = () => {
+            let snapTop = canvas.display.rectangle({
+                x: -track.width / 2 - snapZone,
+                y: -track.height / 2 - snapZone,
+                width: track.width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "1px red",
+                opacity: 0,
+                tag: "snapzone"
+            });
+            let snapBottom = canvas.display.rectangle({
+                x: -track.width / 2 - snapZone,
+                y: track.height / 2 - snapZone * 2,
+                width: track.width + snapZone * 2,
+                height: snapZone * 3,
+                stroke: "1px red",
+                opacity: 0,
+                tag: "snapzone"
+            });
+            // add as child to maintain rotation
+            track.addChild(snapTop);
+            track.addChild(snapBottom);
+        }
+    }
+
+    addTrack("assets/straight.png", 100, 80);
+    addTrack("assets/start.png", 200, 80);
+</script>
+</html>
