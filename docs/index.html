@@ -182,9 +182,9 @@
                     break;
                 }
                 case "curve": {
-                    let snapRight = createSnapzone(width / 2 - snapZone * 2, -height / 2 - snapZone, snapZone * 3, height);
+                    let snapRight = createSnapzone(width / 2 - snapZone * 2, -height / 2 - snapZone - 3, snapZone * 3, height);
                     group.add(snapRight);
-                    let snapBottom = createSnapzone(-width / 2 - snapZone, height / 2 - snapZone * 2, width, snapZone * 3);
+                    let snapBottom = createSnapzone(-width / 2 - snapZone - 3, height / 2 - snapZone * 2, width, snapZone * 3);
                     group.add(snapBottom);
                     break;
                 }
