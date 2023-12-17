@@ -8,12 +8,15 @@
 <div id="debug">
     <input id="forceShowSnapzones" type="checkbox" value="false" onchange="forceShowSnapzones(this.checked)">
     <label for="forceShowSnapzones">Show Snapzones</label>
+    <input id="disableSnapping" type="checkbox" value="false" onchange="Global.disableSnapping = this.checked">
+    <label for="disableSnapping">Disable Snapping</label>
 </div>
 <div id="canvas"></div>
 </body>
 <script>
     const Global = {
         forceShowSnapzones: false,
+        disableSnapping: false,
         IsDebug: window.location.protocol == "file:" || window.location.hostname == "localhost",
     }
 
@@ -68,6 +71,8 @@
     }
 
     function checkSnap(group) {
+        if (Global.disableSnapping)
+            return;
         let children = group.getChildren();
         let track = children.find(n => n.attrs.tag == "track");
         let pos = track.absolutePosition();
