@@ -159,7 +159,7 @@
                 checkSnap(group);
             });
 
-            function createSnapzone(x, y, w, h) {
+            function createSnapzone(x, y, w, h, angle) {
                 return new Konva.Rect({
                     x: x + w / 2,
                     y: y + h / 2,
@@ -168,6 +168,7 @@
                     stroke: "red",
                     strokeWidth: 1,
                     visible: Global.forceShowSnapzones,
+                    rotation: angle ?? 0,
                     tag: "snapzone",
                     offset: {x: w / 2, y: h / 2},
                 });
@@ -181,8 +182,8 @@
                     group.add(snapBottom);
                     break;
                 }
-                case "curve": {
-                    let snapRight = createSnapzone(width / 2 - snapZone * 2, -height / 2 - snapZone - 3, snapZone * 3, height);
+                case "curve": { //TODO: i think the right snapzone is off by one?
+                    let snapRight = createSnapzone(-snapZone + 5, -snapZone * 3 + 2, height, snapZone * 3, 90);
                     group.add(snapRight);
                     let snapBottom = createSnapzone(-width / 2 - snapZone - 3, height / 2 - snapZone * 2, width, snapZone * 3);
                     group.add(snapBottom);
