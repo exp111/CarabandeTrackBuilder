@@ -94,6 +94,7 @@
 
         let snapZones = children.filter(n => n.attrs.tag == "snapzone");
         let groups = layer.getChildren();
+        //TODO: sort by distance between groups
         for (let i in groups) {
             let g = groups[i];
             // do not check intersection with itself
@@ -108,6 +109,14 @@
             let nearest = otherZones.sort((a, b) => dist(a.absolutePosition(), pos) - dist(b.absolutePosition(), pos))[0];
             let nearestOther = snapZones.sort((a, b) => dist(a.absolutePosition(), otherTrack.absolutePosition()) - dist(b.absolutePosition(), otherTrack.absolutePosition()))[0];
             if (nearest == null || nearestOther == null)
+                continue;
+            // check the rotation
+            let nearestRot = nearest.getAbsoluteRotation();
+            let nearestOtherRot = nearestOther.getAbsoluteRotation();
+            // normalize them
+            nearestRot = Math.round((nearestRot + 180) % 180);
+            nearestOtherRot = Math.round((nearestOtherRot + 180) % 180);
+            if (nearestRot != nearestOtherRot)
                 continue;
             if (haveIntersection(nearest.getClientRect(), nearestOther.getClientRect())) {
                 // first get the pos diff between the two zones
