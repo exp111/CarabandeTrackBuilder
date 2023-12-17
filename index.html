@@ -5,15 +5,28 @@
     <script src="https://unpkg.com/konva@9/konva.min.js"></script>
 </head>
 <body>
+<div id="debug">
+    <input id="forceShowSnapzones" type="checkbox" value="false" onchange="forceShowSnapzones(this.checked)">
+    <label for="forceShowSnapzones">Show Snapzones</label>
+</div>
 <div id="canvas"></div>
 </body>
+<script>
+    const Global = {
+        forceShowSnapzones: false,
+        IsDebug: window.location.protocol == "file:" || window.location.hostname == "localhost",
+    }
+
+    function forceShowSnapzones(val) {
+        Global.forceShowSnapzones = val;
+        toggleSnapzones(val);
+    }
+</script>
 <script>
     const nobLength = 8;
     const snapZone = 10;
     var stage = new Konva.Stage({
         container: 'canvas',   // id of container <div>
-        width: window.innerWidth,
-        height: window.innerHeight
     });
     stage.on('contextmenu', function (e) {
         // prevent default behavior
@@ -22,13 +35,18 @@
     var layer = new Konva.Layer();
     stage.add(layer);
 
-    function setCanvasSize(w, h) {
-        stage.width(w);
-        stage.height(h);
+    function setCanvasSize() {
+        stage.width(window.innerWidth);
+        let height = window.innerHeight;
+        if (Global.IsDebug)
+            height -= 25;
+        stage.height(height);
     }
 
     // listen to resize
-    window.onresize = () => setCanvasSize(window.innerWidth, window.innerHeight);
+    window.onresize = () => setCanvasSize();
+    // set size
+    setCanvasSize();
 
     function haveIntersection(r1, r2) {
         return !(
@@ -61,6 +79,7 @@
         function diff(a, b) {
             return {x: a.x - b.x, y: a.y - b.y};
         }
+
         function normalize(vec) {
             let mag = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
             return {x: vec.x / mag, y: vec.y / mag};
@@ -124,10 +143,12 @@
             });
 
             group.on("dragstart", () => {
-                toggleSnapzones(true);
+                if (!Global.forceShowSnapzones)
+                    toggleSnapzones(true);
             });
             group.on("dragend", () => {
-                toggleSnapzones(false);
+                if (!Global.forceShowSnapzones)
+                    toggleSnapzones(false);
                 checkSnap(group);
             });
 
@@ -139,7 +160,7 @@
                     height: h,
                     stroke: "red",
                     strokeWidth: 1,
-                    visible: false,
+                    visible: Global.forceShowSnapzones,
                     tag: "snapzone",
                     offset: {x: w / 2, y: h / 2},
                 });
