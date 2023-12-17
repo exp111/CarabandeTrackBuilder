@@ -72,13 +72,15 @@
 
     function normalize(vec) {
         let mag = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+        if (mag == 0)
+            return vec;
         return {x: vec.x / mag, y: vec.y / mag};
     }
 
     function moveGroupToSnapzone(group, otherGroup, zone, otherZone) {
         // first get the pos diff between the two zones
-        let nearestPos = zone.absolutePosition();
-        let nearestOtherPos = otherZone.absolutePosition();
+        let nearestPos = otherZone.absolutePosition();
+        let nearestOtherPos = zone.absolutePosition();
         let posDiff = diff(nearestPos, nearestOtherPos);
         let groupPos = group.absolutePosition();
         // then go nobLength times to the other track
@@ -130,7 +132,7 @@
             if (nearestRot != nearestOtherRot)
                 continue;
             if (haveIntersection(nearest.getClientRect(), nearestOther.getClientRect())) {
-                moveGroupToSnapzone(group, g, nearest, nearestOther)
+                moveGroupToSnapzone(group, g, nearestOther, nearest);
                 break;
             }
         }
@@ -267,6 +269,11 @@
             tile("straight", 90),
             tile("straight", 270),
             tile("curve", 0),
+            tile("curve", 180),
+            tile("straight", 90),
+            tile("curve", 0),
+            tile("curve", 270),
+            tile("straight", 90),
         ];
 
         let trackArea = {
@@ -297,26 +304,29 @@
                     nextZone = tile.children[1];
                     if (tile.children.length > 2) {
                         let other = tile.children[2];
-                        if (nextZone.getAbsolutePosition().x < other.getAbsolutePosition().x) {
+                        if (nextZone.absolutePosition().x < other.absolutePosition().x) {
                             nextZone = other;
                         }
                     }
                 } else {
-                    // get the left zone //TODO: dont get the left zone but instead the one that is closest to the other zone
-                    let ourZone = tile.children[1];
-                    let other = tile.children[2];
-                    let next = other;
-                    if (other != null) {
-                        if (ourZone.getAbsolutePosition().x > other.getAbsolutePosition().x) {
-                            next = ourZone;
-                            ourZone = other;
-                        }
-                    }
-                    moveGroupToSnapzone(tile, prevTile, nextZone, ourZone);
-                    if (other != null) {
-                        nextZone = next;
-                    } else {
+                    // get the right zone
+                    let zones = tile.children.filter(c => c.attrs.tag == "snapzone");
+                    let pos = tile.absolutePosition();
+                    // get the local offset of the previous snapzone
+                    let offset = diff(prevTile.absolutePosition(), nextZone.absolutePosition());
+                    // then add that onto our current pos to get the absolutepos where our next snapzone should be
+                    let nextZonePos = {
+                        x: pos.x + offset.x,
+                        y: pos.y + offset.y
+                    };
+                    // now find out which actual snapzone is closest to that point
+                    let ourZone = zones.sort((a, b) => dist(a.absolutePosition(), nextZonePos) - dist(b.absolutePosition(), nextZonePos))[0];
+                    moveGroupToSnapzone(tile, prevTile, ourZone, nextZone);
+                    // get the other snapzone for the next tile to snap to
+                    nextZone = zones.find(z => z != ourZone);
+                    if (nextZone == null) {
                         console.error("Dead end");
+                        return;
                     }
                 }
                 // add it to our list
