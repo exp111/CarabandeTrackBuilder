@@ -93,19 +93,15 @@
         }
 
         let snapZones = children.filter(n => n.attrs.tag == "snapzone");
-        let groups = layer.getChildren();
-        //TODO: sort by distance between groups
+        //first filter out the current group, then sort by distance
+        let groups = layer.getChildren().filter(g => g != group).sort((a, b) => dist(a.absolutePosition(), pos) - dist(b.absolutePosition(), pos));
         for (let i in groups) {
             let g = groups[i];
-            // do not check intersection with itself
-            if (g === group)
-                continue;
             // get the other track
             let otherChildren = g.getChildren();
             let otherTrack = otherChildren.find(n => n.attrs.tag == "track");
             let otherZones = otherChildren.filter(n => n.attrs.tag == "snapzone");
             // find the nearest snapzones
-            //TODO: filter out the ones with not matching rotation
             let nearest = otherZones.sort((a, b) => dist(a.absolutePosition(), pos) - dist(b.absolutePosition(), pos))[0];
             let nearestOther = snapZones.sort((a, b) => dist(a.absolutePosition(), otherTrack.absolutePosition()) - dist(b.absolutePosition(), otherTrack.absolutePosition()))[0];
             if (nearest == null || nearestOther == null)
