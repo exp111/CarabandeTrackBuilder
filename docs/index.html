@@ -62,6 +62,34 @@
         );
     }
 
+    function dist(a, b) {
+        return Math.sqrt((Math.pow(b.x - a.x, 2)) + (Math.pow(b.y - a.y, 2)));
+    }
+
+    function diff(a, b) {
+        return {x: a.x - b.x, y: a.y - b.y};
+    }
+
+    function normalize(vec) {
+        let mag = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+        return {x: vec.x / mag, y: vec.y / mag};
+    }
+
+    function moveGroupToSnapzone(group, otherGroup, zone, otherZone) {
+        // first get the pos diff between the two zones
+        let nearestPos = zone.absolutePosition();
+        let nearestOtherPos = otherZone.absolutePosition();
+        let posDiff = diff(nearestPos, nearestOtherPos);
+        let groupPos = group.absolutePosition();
+        // then go nobLength times to the other track
+        let newPos = {x: groupPos.x + posDiff.x, y: groupPos.y + posDiff.y};
+        let trackPosDiff = diff(otherGroup.absolutePosition(), newPos);
+        trackPosDiff = normalize(trackPosDiff);
+        newPos.x += trackPosDiff.x * nobLength;
+        newPos.y += trackPosDiff.y * nobLength;
+        group.position(newPos);
+    }
+
     function toggleSnapzones(val) {
         layer.getChildren().forEach((group) => {
             group.getChildren().forEach((child) => {
@@ -78,19 +106,6 @@
         let children = group.getChildren();
         let track = children.find(n => n.attrs.tag == "track");
         let pos = track.absolutePosition();
-
-        function dist(a, b) {
-            return Math.sqrt((Math.pow(b.x - a.x, 2)) + (Math.pow(b.y - a.y, 2)));
-        }
-
-        function diff(a, b) {
-            return {x: a.x - b.x, y: a.y - b.y};
-        }
-
-        function normalize(vec) {
-            let mag = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
-            return {x: vec.x / mag, y: vec.y / mag};
-        }
 
         let snapZones = children.filter(n => n.attrs.tag == "snapzone");
         //first filter out the current group, then sort by distance
@@ -115,94 +130,96 @@
             if (nearestRot != nearestOtherRot)
                 continue;
             if (haveIntersection(nearest.getClientRect(), nearestOther.getClientRect())) {
-                // first get the pos diff between the two zones
-                let nearestPos = nearest.absolutePosition();
-                let nearestOtherPos = nearestOther.absolutePosition();
-                let posDiff = diff(nearestPos, nearestOtherPos);
-                let groupPos = group.absolutePosition();
-                // then go nobLength times to the other track
-                let newPos = {x: groupPos.x + posDiff.x, y: groupPos.y + posDiff.y};
-                let trackPosDiff = diff(g.absolutePosition(), newPos);
-                trackPosDiff = normalize(trackPosDiff);
-                newPos.x += trackPosDiff.x * nobLength;
-                newPos.y += trackPosDiff.y * nobLength;
-                group.position(newPos);
+                moveGroupToSnapzone(group, g, nearest, nearestOther)
                 break;
             }
         }
     }
 
     function addTrack(type, url, x, y, i) {
-        Konva.Image.fromURL(url, function (track) {
-            var group = new Konva.Group({
-                x: x,
-                y: y,
-                draggable: true,
-            });
-            let width = track.width();
-            let height = track.height();
-            track.setAttrs({
-                tag: "track",
-                offset: {x: width / 2, y: height / 2},
-            });
-            group.add(track);
-
-            group.on("mousedown", (e) => {
-                if (e.evt.button != 2)
-                    return;
-                group.rotate(45);
-            });
-
-            group.on("dragstart", () => {
-                if (!Global.forceShowSnapzones)
-                    toggleSnapzones(true);
-            });
-            group.on("dragend", () => {
-                if (!Global.forceShowSnapzones)
-                    toggleSnapzones(false);
-                checkSnap(group);
-            });
-
-            function createSnapzone(x, y, w, h, angle) {
-                return new Konva.Rect({
-                    x: x + w / 2,
-                    y: y + h / 2,
-                    width: w,
-                    height: h,
-                    stroke: "red",
-                    strokeWidth: 1,
-                    visible: Global.forceShowSnapzones,
-                    rotation: angle ?? 0,
-                    tag: "snapzone",
-                    offset: {x: w / 2, y: h / 2},
+        let promise = new Promise((resolve, reject) => {
+            Konva.Image.fromURL(url, function (track) {
+                var group = new Konva.Group({
+                    x: x,
+                    y: y,
+                    type: type,
+                    draggable: true,
                 });
-            }
+                let width = track.width();
+                let height = track.height();
+                track.setAttrs({
+                    tag: "track",
+                    type: type,
+                    offset: {x: width / 2, y: height / 2},
+                });
+                group.add(track);
 
-            switch (type) {
-                case "straight": {
-                    let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
-                    group.add(snapTop);
-                    let snapBottom = createSnapzone(-width / 2 - snapZone, height / 2 - snapZone * 2, width + snapZone * 2, snapZone * 3);
-                    group.add(snapBottom);
-                    break;
+                group.on("mousedown", (e) => {
+                    if (e.evt.button != 2)
+                        return;
+                    group.rotate(45);
+                });
+
+                group.on("dragstart", () => {
+                    if (!Global.forceShowSnapzones)
+                        toggleSnapzones(true);
+                });
+                group.on("dragend", () => {
+                    if (!Global.forceShowSnapzones)
+                        toggleSnapzones(false);
+                    checkSnap(group);
+                });
+
+                function createSnapzone(x, y, w, h, angle) {
+                    return new Konva.Rect({
+                        x: x + w / 2,
+                        y: y + h / 2,
+                        width: w,
+                        height: h,
+                        stroke: "red",
+                        strokeWidth: 1,
+                        visible: Global.forceShowSnapzones,
+                        rotation: angle ?? 0,
+                        tag: "snapzone",
+                        offset: {x: w / 2, y: h / 2},
+                    });
                 }
-                case "curve": { //TODO: i think the right snapzone is off by one?
-                    let snapRight = createSnapzone(-snapZone + 5, -snapZone * 3 + 2, height, snapZone * 3, 90);
-                    group.add(snapRight);
-                    let snapBottom = createSnapzone(-width / 2 - snapZone - 3, height / 2 - snapZone * 2, width, snapZone * 3);
-                    group.add(snapBottom);
-                    break;
+
+                let trackType = type;
+                switch (type) {
+                    case "xstraight":
+                    case "ystraight":
+                    case "start":
+                        trackType = "straight";
                 }
-                case "rampEnd": //TODO: maybe make the rampEnd hitbox smaller?
-                case "ramp": {
-                    let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
-                    group.add(snapTop);
-                    break;
+                switch (trackType) {
+                    case "straight": {
+                        let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
+                        group.add(snapTop);
+                        let snapBottom = createSnapzone(-width / 2 - snapZone, height / 2 - snapZone * 2, width + snapZone * 2, snapZone * 3);
+                        group.add(snapBottom);
+                        break;
+                    }
+                    case "curve": { //TODO: i think the right snapzone is off by one?
+                        let snapRight = createSnapzone(-snapZone + 5, -snapZone * 3 + 2, height, snapZone * 3, 90);
+                        group.add(snapRight);
+                        let snapBottom = createSnapzone(-width / 2 - snapZone - 3, height / 2 - snapZone * 2, width, snapZone * 3);
+                        group.add(snapBottom);
+                        break;
+                    }
+                    case "rampEnd": //TODO: maybe make the rampEnd hitbox smaller?
+                    case "ramp": {
+                        let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
+                        group.add(snapTop);
+                        break;
+                    }
                 }
-            }
-            layer.add(group);
-            tiles[i] = group;
+                layer.add(group);
+                tiles[i] = group;
+                resolve();
+            });
         });
+        return promise;
     }
 
     //TODO: add a seperation between normal/addon tiles?
@@ -213,29 +230,102 @@
 
     function addPreset(track) {
         let url = `assets/${track}.png`;
-        let type = track;
-        switch (track) {
-            case "xstraight":
-            case "ystraight":
-            case "start":
-                type = "straight";
-        }
         let x = tilesAdded % tilesPerRow * (presetRect.x2 - presetRect.x1 / tilesPerRow) + presetRect.x1;
         let y = Math.floor(tilesAdded / tilesPerRow) * 100 + presetRect.y1;
-        addTrack(type, url, x, y, tilesAdded);
+        let ret = addTrack(track, url, x, y, tilesAdded);
         tilesAdded++;
+        return ret;
     }
 
-    addPreset("start");
+    let promises = [];
+    promises.push(addPreset("start"));
     for (let i = 0; i < 5; i++) {
-        addPreset("straight");
+        promises.push(addPreset("straight"));
     }
     for (let i = 0; i < 12; i++) {
-        addPreset("curve");
+        promises.push(addPreset("curve"));
     }
-    addPreset("ramp");
-    addPreset("rampEnd");
-    addPreset("xstraight");
-    addPreset("ystraight");
+    promises.push(addPreset("ramp"));
+    promises.push(addPreset("rampEnd"));
+    promises.push(addPreset("xstraight"));
+    promises.push(addPreset("ystraight"));
+
+    Promise.all(promises).then(() => {
+        // build track
+        function tile(type, angle) {
+            return {type: type, angle: angle}
+        }
+
+        // tracks
+        let track = [
+            tile("start", 270),
+            tile("straight", 90),
+            tile("curve", 180),
+            tile("curve", 0),
+            tile("curve", 180),
+            tile("curve", 90),
+            tile("straight", 90),
+            tile("straight", 270),
+            tile("curve", 0),
+        ];
+
+        let trackArea = {
+            x1: presetRect.x2, y1: presetRect.y1,
+            x2: window.innerWidth, y2: window.innerHeight
+        };
+
+        function buildTrack(track) {
+            let usedTiles = [];
+            let prevTile = null;
+            let nextZone = null;
+            for (let i in track) {
+                let info = track[i];
+                // get a matching tile
+                let tile = tiles.find(t => t.attrs.type == info.type && !usedTiles.includes(t));
+                if (tile == null) {
+                    console.error("not enough tiles.");
+                    return;
+                }
+                // place the tile
+                tile.rotation(info.angle);
+                if (prevTile == null) {
+                    tile.position({
+                        x: trackArea.x1 + (trackArea.x2 - trackArea.x1) / 2,
+                        y: trackArea.y1 + (trackArea.y2 - trackArea.y1) / 2
+                    });
+                    // get the zone that is on the right
+                    nextZone = tile.children[1];
+                    if (tile.children.length > 2) {
+                        let other = tile.children[2];
+                        if (nextZone.getAbsolutePosition().x < other.getAbsolutePosition().x) {
+                            nextZone = other;
+                        }
+                    }
+                } else {
+                    // get the left zone //TODO: dont get the left zone but instead the one that is closest to the other zone
+                    let ourZone = tile.children[1];
+                    let other = tile.children[2];
+                    let next = other;
+                    if (other != null) {
+                        if (ourZone.getAbsolutePosition().x > other.getAbsolutePosition().x) {
+                            next = ourZone;
+                            ourZone = other;
+                        }
+                    }
+                    moveGroupToSnapzone(tile, prevTile, nextZone, ourZone);
+                    if (other != null) {
+                        nextZone = next;
+                    } else {
+                        console.error("Dead end");
+                    }
+                }
+                // add it to our list
+                usedTiles.push(tile);
+                prevTile = tile;
+            }
+        }
+
+        buildTrack(track);
+    });
 </script>
 </html>
