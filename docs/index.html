@@ -198,10 +198,36 @@
         });
     }
 
-    addTrack("straight", "assets/straight.png", 100, 80);
-    addTrack("straight", "assets/start.png", 200, 80);
-    addTrack("curve", "assets/curve.png", 300, 80);
-    addTrack("ramp", "assets/ramp.png", 400, 80);
-    addTrack("rampEnd", "assets/rampEnd.png", 500, 80);
+    //TODO: add a seperation between normal/addon tiles?
+    let presetRect = {x1: 50, y1: 100, x2: 150, y2: 500};
+    let tilesPerRow = 3;
+    let tilesAdded = 0;
+
+    function addPreset(track) {
+        let url = `assets/${track}.png`;
+        let type = track;
+        switch (track) {
+            case "xstraight":
+            case "ystraight":
+            case "start":
+                type = "straight";
+        }
+        let x = tilesAdded % tilesPerRow * (presetRect.x2 - presetRect.x1 / tilesPerRow) + presetRect.x1;
+        let y = Math.floor(tilesAdded / tilesPerRow) * 100 + presetRect.y1;
+        tilesAdded++;
+        addTrack(type, url, x, y);
+    }
+
+    addPreset("start");
+    for (let i = 0; i < 5; i++) {
+        addPreset("straight");
+    }
+    for (let i = 0; i < 12; i++) {
+        addPreset("curve");
+    }
+    addPreset("ramp");
+    addPreset("rampEnd");
+    addPreset("xstraight");
+    addPreset("ystraight");
 </script>
 </html>
