@@ -96,7 +96,7 @@ function checkSnap(group) {
     }
 }
 
-function addTrack(type, url, x, y, i) {
+function addTrack(type, url, x, y, index) {
     let promise = new Promise((resolve, reject) => {
         Konva.Image.fromURL(url, function (track) {
             var group = new Konva.Group({
@@ -175,7 +175,7 @@ function addTrack(type, url, x, y, i) {
                 }
             }
             Global.layer.add(group);
-            Global.tiles[i] = group;
+            Global.tiles[index] = group;
             resolve();
         });
     });
@@ -188,15 +188,13 @@ const presetRect = {x1: 50, y1: 100, x2: 150, y2: 500};
 const tilesPerRow = 3;
 
 function initPresets() {
-    let tilesAdded = 0;
     Global.tiles = [];
+    let index = 0;
 
     function addPreset(track) {
         let url = `assets/${track}.png`;
-        let x = tilesAdded % tilesPerRow * (presetRect.x2 - presetRect.x1 / tilesPerRow) + presetRect.x1;
-        let y = Math.floor(tilesAdded / tilesPerRow) * 100 + presetRect.y1;
-        let ret = addTrack(track, url, x, y, tilesAdded);
-        tilesAdded++;
+        let ret = addTrack(track, url, 0, 0, index);
+        index++;
         return ret;
     }
 
@@ -212,5 +210,19 @@ function initPresets() {
     promises.push(addPreset("rampEnd"));
     promises.push(addPreset("xstraight"));
     promises.push(addPreset("ystraight"));
-    return promises;
+    Promise.all(promises).then(() => {
+        clearTracks();
+    });
+}
+
+function clearTracks() {
+    let tilesAdded = 0;
+    for (let i in Global.tiles) {
+        let tile = Global.tiles[i];
+        let x = tilesAdded % tilesPerRow * (presetRect.x2 - presetRect.x1 / tilesPerRow) + presetRect.x1;
+        let y = Math.floor(tilesAdded / tilesPerRow) * 100 + presetRect.y1;
+        tile.rotation(0);
+        tile.position(new Vector(x, y));
+        tilesAdded++;
+    }
 }

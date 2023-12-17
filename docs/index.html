@@ -10,11 +10,12 @@
     <label for="forceShowSnapzones">Show Snapzones</label>
 </div>
 <div id="menu">
-    <input id="disableSnapping" type="checkbox" value="false" onchange="Global.disableSnapping = this.checked">
+    <input id="disableSnapping" type="checkbox" value="false" onchange="disableSnapping(this.checked)">
     <label for="disableSnapping">Disable Snapping</label>
     <select id="tracks" onchange="onTrackChange(this.value)">
         <option value="" disabled selected hidden>Preset Tracks</option>
     </select>
+    <button onclick="clearButton()">Clear</button>
 </div>
 <div id="canvas"></div>
 </body>
@@ -35,8 +36,15 @@
         Global.forceShowSnapzones = val;
         toggleSnapzones(val);
     }
+    function disableSnapping(val) {
+        Global.disableSnapping = val;
+    }
     function onTrackChange(val) {
         Global.trackbuilder.onTrackSelect(val);
+    }
+    function clearButton() {
+        tracks.selectedIndex = 0;
+        clearTracks();
     }
     createCanvas();
     initPresets();
