@@ -73,26 +73,41 @@
         snapHandler(this);
     }
 
-    function collidesWith(obj, other) {
-        let x = obj.abs_x;
-        let y = obj.abs_y;
-        let oX = other.abs_x;
-        let oY = other.abs_y;
-        let endX = x + obj.width;
-        let endY = y + obj.height;
-        let oEndX = oX + other.width;
-        let oEndY = oY + other.height;
-        // if rectangle has area 0, no overlap
-        if (x == endX || y == endY || oX == oEndX || oY == oEndY)
+    function degrees_to_radians(degrees)
+    {
+        var pi = Math.PI;
+        return degrees * (pi/180);
+    }
+
+    function rotateAround(origin, point, angle) {
+        qx = origin.x + Math.cos(angle) * (point.x - origin.x) - Math.sin(angle) * (point.y - origin.y);
+        qy = origin.y + Math.sin(angle) * (point.x - origin.x) + Math.cos(angle) * (point.y - origin.y);
+        return {x: qx, y: qy};
+    }
+
+    function collidesWith(parent, obj, otherParent, other) {
+        let rot = degrees_to_radians(parent.rotation);
+        let oRot = degrees_to_radians(otherParent.rotation);
+        let point = {x: obj.abs_x, y: obj.abs_y};
+        let end = {x: obj.abs_x + obj.width, y: obj.abs_y + obj.height};
+        let oPoint = {x: other.abs_x, y: other.abs_y};
+        let otherEnd = {x: other.abs_x + other.width, y: other.abs_y + other.height};
+        let p = rotateAround(parent, point, rot);
+        let o = rotateAround(otherParent, oPoint, oRot);
+        let pEnd = rotateAround(parent, end, rot);
+        let oEnd = rotateAround(otherParent, otherEnd, oRot);
+        //TODO: if its rotated we still need to check the upper left point instead of the original upper left
+        // if rectangle has area 0, no overlap //TODO: remove this check?
+        if (p.x == pEnd.x || p.y == pEnd.y || o.x == oEnd.x || o.y == oEnd.y)
             return false;
 
         // If one rectangle is on left side of other
-        if (x > oEndX || oX > endX) {
+        if (p.x > oEnd.x || o.x > pEnd.x) {
             return false;
         }
 
         // If one rectangle is above other
-        if (y > oEndY || oY > endY) {
+        if (p.y > oEnd.y || o.y > pEnd.y) {
             return false;
         }
         return true;
@@ -111,17 +126,18 @@
                 continue;
             console.log(obj);
             //TODO: check if rotation matches
+            //TODO: instead use a smaller snapzone on the dragged track?
             // top
             let top = base.children[0];
             let otherBottom = obj.children[1];
-            if (collidesWith(top, otherBottom)) {
+            if (collidesWith(base, top, obj, otherBottom)) {
                 base.moveTo(obj.x, obj.y + obj.height - nobLength * 2);
                 break;
             }
             // bottom
             let bottom = base.children[1];
             let otherTop = obj.children[0];
-            if (collidesWith(bottom, otherTop)) {
+            if (collidesWith(base, bottom, obj, otherTop)) {
                 base.moveTo(obj.x, obj.y - obj.height + nobLength * 2);
                 break;
             }

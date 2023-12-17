@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Carabande</title>
+    <script src="https://unpkg.com/konva@9/konva.min.js"></script>
+</head>
+<body>
+<div id="canvas"></div>
+</body>
+<script>
+    const nobLength = 8;
+    const snapZone = 10;
+    var stage = new Konva.Stage({
+        container: 'canvas',   // id of container <div>
+        width: window.innerWidth,
+        height: window.innerHeight
+    });
+    stage.on('contextmenu', function (e) {
+        // prevent default behavior
+        e.evt.preventDefault();
+    });
+    var layer = new Konva.Layer();
+    stage.add(layer);
+
+    function setCanvasSize(w, h) {
+        stage.width(w);
+        stage.height(h);
+    }
+
+    // listen to resize
+    window.onresize = () => setCanvasSize(window.innerWidth, window.innerHeight);
+
+    function haveIntersection(r1, r2) {
+        return !(
+            r2.x > r1.x + r1.width ||
+            r2.x + r2.width < r1.x ||
+            r2.y > r1.y + r1.height ||
+            r2.y + r2.height < r1.y
+        );
+    }
+
+    function toggleSnapzones(val) {
+        layer.getChildren().forEach((group) => {
+            group.getChildren().forEach((child) => {
+                if (child.attrs.tag != "snapzone")
+                    return;
+                child.visible(val);
+            })
+        })
+    }
+
+    function checkSnap(group) {
+        let children = group.getChildren();
+        let track = children.find(n => n.attrs.tag == "track");
+        let pos = track.absolutePosition();
+
+        function dist(a, b) {
+            return Math.sqrt((Math.pow(b.x - a.x, 2)) + (Math.pow(b.y - a.y, 2)));
+        }
+
+        function diff(a, b) {
+            return {x: a.x - b.x, y: a.y - b.y};
+        }
+        function normalize(vec) {
+            let mag = Math.sqrt(vec.x * vec.x + vec.y * vec.y);
+            return {x: vec.x / mag, y: vec.y / mag};
+        }
+
+        let snapZones = children.filter(n => n.attrs.tag == "snapzone");
+        let groups = layer.getChildren();
+        for (let i in groups) {
+            let g = groups[i];
+            // do not check intersection with itself
+            if (g === group)
+                continue;
+            // get the other track
+            let otherChildren = g.getChildren();
+            let otherTrack = otherChildren.find(n => n.attrs.tag == "track");
+            let otherZones = otherChildren.filter(n => n.attrs.tag == "snapzone");
+            // find the nearest snapzones
+            //TODO: filter out the ones with not matching rotation
+            let nearest = otherZones.sort((a, b) => dist(a.absolutePosition(), pos) - dist(b.absolutePosition(), pos))[0];
+            let nearestOther = snapZones.sort((a, b) => dist(a.absolutePosition(), otherTrack.absolutePosition()) - dist(b.absolutePosition(), otherTrack.absolutePosition()))[0];
+            if (nearest == null || nearestOther == null)
+                continue;
+            if (haveIntersection(nearest.getClientRect(), nearestOther.getClientRect())) {
+                // first get the pos diff between the two zones
+                let nearestPos = nearest.absolutePosition();
+                let nearestOtherPos = nearestOther.absolutePosition();
+                let posDiff = diff(nearestPos, nearestOtherPos);
+                let groupPos = group.absolutePosition();
+                // then go nobLength times to the other track
+                //TODO: we also need to calculate with group size differences
+                let newPos = {x: groupPos.x + posDiff.x, y: groupPos.y + posDiff.y};
+                let trackPosDiff = diff(g.absolutePosition(), newPos);
+                trackPosDiff = normalize(trackPosDiff);
+                newPos.x += trackPosDiff.x * nobLength;
+                newPos.y += trackPosDiff.y * nobLength;
+                group.position(newPos);
+                break;
+            }
+        }
+    }
+
+    function addTrack(type, url, x, y) {
+        Konva.Image.fromURL(url, function (track) {
+            var group = new Konva.Group({
+                x: x,
+                y: y,
+                draggable: true,
+            });
+            let width = track.width();
+            let height = track.height();
+            track.setAttrs({
+                tag: "track",
+                offset: {x: width / 2, y: height / 2},
+            });
+            group.add(track);
+
+            group.on("mousedown", (e) => {
+                if (e.evt.button != 2)
+                    return;
+                group.rotate(45);
+            });
+
+            group.on("dragstart", () => {
+                toggleSnapzones(true);
+            });
+            group.on("dragend", () => {
+                toggleSnapzones(false);
+                checkSnap(group);
+            });
+
+            function createSnapzone(x, y, w, h) {
+                return new Konva.Rect({
+                    x: x + w / 2,
+                    y: y + h / 2,
+                    width: w,
+                    height: h,
+                    stroke: "red",
+                    strokeWidth: 1,
+                    visible: false,
+                    tag: "snapzone",
+                    offset: {x: w / 2, y: h / 2},
+                });
+            }
+
+            switch (type) {
+                case "straight": {
+                    let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
+                    group.add(snapTop);
+                    let snapBottom = createSnapzone(-width / 2 - snapZone, height / 2 - snapZone * 2, width + snapZone * 2, snapZone * 3);
+                    group.add(snapBottom);
+                    break;
+                }
+                case "curve": {
+                    let snapRight = createSnapzone(width / 2 - snapZone * 2, -height / 2 - snapZone, snapZone * 3, height);
+                    group.add(snapRight);
+                    let snapBottom = createSnapzone(-width / 2 - snapZone, height / 2 - snapZone * 2, width, snapZone * 3);
+                    group.add(snapBottom);
+                    break;
+                }
+                case "rampEnd": //TODO: maybe make the rampEnd hitbox smaller?
+                case "ramp": {
+                    let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
+                    group.add(snapTop);
+                    break;
+                }
+            }
+            layer.add(group);
+        });
+    }
+
+    addTrack("straight", "assets/straight.png", 100, 80);
+    addTrack("straight", "assets/start.png", 200, 80);
+    addTrack("curve", "assets/curve.png", 300, 80);
+    addTrack("ramp", "assets/ramp.png", 400, 80);
+    addTrack("rampEnd", "assets/rampEnd.png", 500, 80);
+</script>
+</html>
