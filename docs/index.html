@@ -19,6 +19,7 @@
         disableSnapping: false,
         IsDebug: window.location.protocol == "file:" || window.location.hostname == "localhost",
     }
+    Global.forceShowSnapzones = Global.IsDebug;
 
     function forceShowSnapzones(val) {
         Global.forceShowSnapzones = val;
