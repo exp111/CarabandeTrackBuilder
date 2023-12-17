@@ -12,7 +12,9 @@
 <div id="menu">
     <input id="disableSnapping" type="checkbox" value="false" onchange="Global.disableSnapping = this.checked">
     <label for="disableSnapping">Disable Snapping</label>
-    <select id="tracks" onchange="onTrackChange(this.value)"></select>
+    <select id="tracks" onchange="onTrackChange(this.value)">
+        <option value="" disabled selected hidden>Preset Tracks</option>
+    </select>
 </div>
 <div id="canvas"></div>
 </body>

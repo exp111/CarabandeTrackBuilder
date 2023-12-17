@@ -39,7 +39,6 @@ class Trackbuilder {
             let track = this.Tracks[i];
             select.appendChild(new Option(track.name, track.name));
         }
-        select.selectedIndex = -1;
     }
 
     onTrackSelect(name) {
