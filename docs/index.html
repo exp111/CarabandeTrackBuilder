@@ -8,6 +8,7 @@
 <div id="debug">
     <input id="forceShowSnapzones" type="checkbox" value="false" onchange="forceShowSnapzones(this.checked)">
     <label for="forceShowSnapzones">Show Snapzones</label>
+    <button onclick="serializeTrack()">Serialize</button>
 </div>
 <div id="menu">
     <input id="disableSnapping" type="checkbox" value="false" onchange="disableSnapping(this.checked)">
@@ -35,6 +36,9 @@
     function forceShowSnapzones(val) {
         Global.forceShowSnapzones = val;
         toggleSnapzones(val);
+    }
+    function serializeTrack() {
+        console.log(Global.trackbuilder.serializeTrack());
     }
     function disableSnapping(val) {
         Global.disableSnapping = val;

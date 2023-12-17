@@ -90,6 +90,7 @@ function checkSnap(group) {
         if (nearestRot != nearestOtherRot)
             continue;
         if (haveIntersection(nearest.getClientRect(), nearestOther.getClientRect())) {
+            //TODO: mark snapzone as used so we cant double use a snap
             moveGroupToSnapzone(group, g, nearestOther, nearest);
             break;
         }
