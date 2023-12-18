@@ -199,6 +199,10 @@ class Trackbuilder {
             return Math.floor(Math.random() * arr.length)
         }
 
+        function randomElement(arr) {
+            return arr[randomIndex(arr)];
+        }
+
         function getRandomTile(used) {
             let types = ["straight", "curve"];
             //TODO: change odds to be relative to the amount of tiles
@@ -207,9 +211,8 @@ class Trackbuilder {
             if (types.length == 0)
                 return null;
 
-            let index = randomIndex(types);
             return {
-                trackType: types[index]
+                trackType: randomElement(types)
             };
         }
 
@@ -302,18 +305,18 @@ class Trackbuilder {
             return null;
         }
 
-        function getRotationFromDirection(tile) {
+        function getRotationFromDirection(tile, randomizeStraight) {
             switch (tile.trackType) {
                 case "straight":
                     switch (tile.direction) {
                         case "l":
-                            return 270;
+                            return randomizeStraight ? randomElement([90, 270]) : 270;
                         case "r":
-                            return 90;
+                            return randomizeStraight ? randomElement([90, 270]) : 90;
                         case "u":
-                            return 0;
+                            return randomizeStraight ? randomElement([0, 180]) : 0;
                         case "d":
-                            return 180;
+                            return randomizeStraight ? randomElement([0, 180]) : 180;
                     }
                 case "curve":
                     switch (tile.direction) {
@@ -329,14 +332,16 @@ class Trackbuilder {
             }
         }
 
+        // Gets a random type with the given track type from the available tracks and marks it as used
         function getRandomType(trackType) {
+            // filter out any tiles that have a different tracktype or are used
             let filtered = availableTiles.filter(t => t.trackType == trackType && !usedTiles[t.index]);
             if (filtered.length == 0) {
                 //console.debug(`no tiles of tracktype ${trackType} left`);
                 return null;
             }
-            let index = randomIndex(filtered);
-            let selected = filtered[index];
+            let selected = randomElement(filtered);
+            // mark the tile as used
             usedTiles[selected.index] = true;
             return selected.type;
         }
@@ -438,7 +443,11 @@ class Trackbuilder {
         }
         //console.debug("track:");
         //console.debug(track);
-        //TODO: randomize straight rotation
-        this.buildTrack({tiles: track.map(t => new Tile(t.type ?? getRandomType(t.trackType), getRotationFromDirection(t)))});
+        this.buildTrack({tiles: track.map(t =>
+                new Tile(
+                    // if the type is already set use that, otherwise get a random available one for the track type
+                    t.type ?? getRandomType(t.trackType),
+                    // get the rotation through the direction (and randomize if its a straight)
+                    getRotationFromDirection(t, true)))});
     }
 }
