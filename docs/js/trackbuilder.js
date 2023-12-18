@@ -186,7 +186,10 @@ class Trackbuilder {
                     }
                     break;
             }
-
+        }
+        if (min > availableTiles.length) {
+            alert(`There are only ${availableTiles.length} tiles available`);
+            return;
         }
         //console.debug("availableTiles:");
         //console.debug(availableTiles);
