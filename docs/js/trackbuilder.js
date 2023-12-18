@@ -76,7 +76,10 @@ class Trackbuilder {
             // get a matching tile
             let tile = Global.tiles.find(t => t.attrs.type == info.Type && !usedTiles.includes(t));
             if (tile == null) {
-                console.error("not enough tiles.");
+                if (!info.Type || !Global.tiles.find(t => t.attrs.type == info.Type))
+                    console.error(`Could not find tile with type ${info.Type}. Invalid track?`)
+                else
+                    console.error("not enough tiles.");
                 return;
             }
             // place the tile
@@ -161,6 +164,7 @@ class Trackbuilder {
 
     random() {
         let availableTiles = [];
+        let availableTracktypes = {};
         for (let i in Global.tiles) {
             let tile = Global.tiles[i];
             let type = tile.attrs.trackType;
@@ -171,9 +175,15 @@ class Trackbuilder {
                     break;
                 default:
                     availableTiles.push({
+                        index: i,
                         type: tile.attrs.type,
                         trackType: type
                     });
+                    if (availableTracktypes[type]) {
+                        availableTracktypes[type]++;
+                    } else {
+                        availableTracktypes[type] = 1;
+                    }
                     break;
             }
 
@@ -181,30 +191,79 @@ class Trackbuilder {
         console.log("availableTiles:");
         console.log(availableTiles);
         let usedTiles = {};
+        let usedTracktypes = {};
+        for (let i in availableTracktypes)
+            usedTracktypes[i] = 0;
 
         function randomIndex(arr) {
             return Math.floor(Math.random() * arr.length)
         }
-        function getRandomTile() {
-            while (true) {
-                let index = randomIndex(availableTiles);
-                if (!usedTiles[index]) {
-                    return {
-                        index: index,
-                        type: availableTiles[index].type,
-                        trackType: availableTiles[index].trackType,
-                        direction: null
-                    };
+
+        function getRandomTile(used, suggestion) {
+            let types = ["straight", "curve"];
+            //TODO: change odds to be relative to the amount of tiles
+            // filter out any tracktypes that are not available anymore or were already tried
+            types = types.filter(t => availableTracktypes[t] > usedTracktypes[t] && !(used[t] != null && used[t].triedAll));
+            if (types.length == 0)
+                return null;
+            if (suggestion != null) {
+                if (types.includes(suggestion))
+                    return {trackType: suggestion};
+                else return null;
+            }
+
+            let index = randomIndex(types);
+            return {
+                trackType: types[index]
+            };
+        }
+
+        function checkTrack(track, tile) {
+            let grid = {0: {}};
+            let x = 0;
+            let y = 0;
+
+            function next(direction) {
+                switch (direction) {
+                    case "l":
+                        x--;
+                        break;
+                    case "r":
+                        x++;
+                        break;
+                    case "u":
+                        y++;
+                        break;
+                    case "d":
+                        y--;
+                        break;
                 }
             }
-        }
 
-        function checkForEnd(track) {
-            return false;
-        }
-
-        function checkForCollision(track, tile) {
-            return false;
+            for (let i in track) {
+                let t = track[i];
+                grid[x][y] = t;
+                next(t.direction);
+                // check if the column exists
+                if (!grid[x]) {
+                    grid[x] = {};
+                }
+                // if the tile is already marked, we have a collision
+                if (grid[x][y]) {
+                    return -1;
+                }
+            }
+            next(tile.direction);
+            if (!grid[x]) { // next column doesnt exist, so its empty
+                return 0;
+            }
+            let last = grid[x][y];
+            if (last) {
+                if (last.type == "start")
+                    return 1;
+                return -1; // collision
+            }
+            return 0;
         }
 
         function getValidDirection(prev, next) {
@@ -226,7 +285,7 @@ class Trackbuilder {
                                 return ["l", "r"];
                     }
                 }
-                case "curve": { //TODO: for curves we also need to look at the prev one
+                case "curve": {
                     switch (next.trackType) {
                         case "straight":
                             return [prev.direction];
@@ -242,60 +301,191 @@ class Trackbuilder {
                     }
                 }
             }
+            console.error("Could not get a valid direction");
+            return null;
         }
 
         function getRotationFromDirection(tile) {
             switch (tile.trackType) {
                 case "straight":
                     switch (tile.direction) {
-                        case "l": return 270;
-                        case "r": return 90;
-                        case "u": return 0;
-                        case "d": return 180;
+                        case "l":
+                            return 270;
+                        case "r":
+                            return 90;
+                        case "u":
+                            return 0;
+                        case "d":
+                            return 180;
                     }
                 case "curve":
                     switch (tile.direction) {
-                        case "l": return tile.prevDirection == "u" ? 90 : 180;
-                        case "r": return tile.prevDirection == "u" ? 0 : 270;
-                        case "u": return tile.prevDirection == "r" ? 180 : 270;
-                        case "d": return tile.prevDirection == "r" ? 90 : 0;
+                        case "l":
+                            return tile.prevDirection == "u" ? 90 : 180;
+                        case "r":
+                            return tile.prevDirection == "u" ? 0 : 270;
+                        case "u":
+                            return tile.prevDirection == "r" ? 180 : 270;
+                        case "d":
+                            return tile.prevDirection == "r" ? 90 : 0;
                     }
             }
         }
 
-        let cap = 6;
+        function getRandomType(trackType) {
+            let filtered = availableTiles.filter(t => t.trackType == trackType && !usedTiles[t.index]);
+            if (filtered.length == 0) {
+                console.error(`no tiles of tracktype ${trackType} left`);
+                return null;
+            }
+            let index = randomIndex(filtered);
+            let selected = filtered[index];
+            usedTiles[selected.index] = true;
+            return selected.type;
+        }
+
+        let cap = 7;
         let track = [];
+        let used = {}
         console.log("track gen:");
-        for (let i = 0; i < cap; i++) {
+        // force the start as the first tile
+        track.push({type: "start", trackType: "straight", direction: "r"})//TODO: allow other start directions than r (needs to be fixed in the track builder)
+        // mark them as used
+        usedTracktypes["straight"]++;
+        usedTiles[availableTiles.find(t => t.type == "start").index] = true;
+        // now for the rest of the track
+        for (let i = 1; i < cap; i++) {
             let tile = null;
+            if (!used[i])
+                used[i] = {};
             while (tile == null) {
-                // force start to be the first tile, else use a random tile
-                tile = i == 0 ? {index: 0, type: "start", trackType: "straight"} : getRandomTile();
-                //valid rotations //TODO: skew
-                let validDirections = ["r"] //TODO: allow other start directions than r (needs to be fixed in the track builder)
-                if (track.length != 0) {
-                    let prev = track[track.length - 1];
-                    validDirections = getValidDirection(prev, tile);
+                // get a random tile
+                let suggestion = null;
+                switch (i) {
+                    case 1:
+                    case 2:
+                    case 4:
+                    case 5:
+                        suggestion = "curve";
+                        break;
+                    case 3:
+                        suggestion = "straight";
+                        break;
                 }
-                // getrandomrotation
-                tile.direction = validDirections[randomIndex(validDirections)];
-                console.log(tile);
-                if (checkForCollision()) {
-                    // dont use tile
-                    tile = null;
-                } else {
-                    usedTiles[tile.index] = true;
-                    // use tile
-                    track.push(tile);
-                    // if end, its a valid track
-                    if (checkForEnd()) {
+                tile = getRandomTile(used[i], suggestion);
+
+                //TODO: we can optimize this by checking if we can potentially go from that tile in cap-i steps to the goal
+                if (tile == null) {
+                    console.error(`no tiles available ${i}`);
+                    for (let j in used[i]) {
+                        console.log(used[i][j]);
+                    }
+                    // remove the previous tile as it cant work like this
+                    let prev = track.pop();
+                    usedTracktypes[prev.trackType]--;
+                    // clear the future combinations
+                    used[i] = {};
+                    i--;
+                    if (i < 1) {
+                        console.error("oob");
+                        i = cap;
                         break;
                     }
+                    // mark the previous direction as used
+                    if (used[i][prev.trackType]) {
+                        used[i][prev.trackType].directions.push(prev.direction);
+                    } else {
+                        used[i][prev.trackType] = {
+                            triedAll: false,
+                            directions: [prev.direction]
+                        };
+                    }
+                    continue;
                 }
+                //TODO: if we dont get a tile here, we need to go back one step
+                //valid rotations //TODO: skew
+                let prev = track[track.length - 1];
+                let validDirections = getValidDirection(prev, tile);
+                // remove used directions
+                if (used[i][tile.trackType]) {
+                    // filter out any directions that were previously used
+                    validDirections = validDirections.filter(d => !used[i][tile.trackType].directions.includes(d));
+                }
+                // if all directions were used
+                if (validDirections.length == 0) {
+                    used[i][tile.trackType].triedAll = true;
+                    console.error(`tracktype ${tile.trackType} was fully tried`);
+                    tile = null;
+                    continue;
+                }
+
+                // getrandomrotation
+                tile.direction = validDirections[randomIndex(validDirections)];
+
+                let newDir = null;
+                switch (i) {
+                    case 1:
+                        newDir = "u";
+                        break;
+                    case 2:
+                        newDir = "l";
+                        break;
+                    case 3:
+                        newDir = "l";
+                        break;
+                    case 4:
+                        newDir = "d";
+                        break;
+                    case 5:
+                        newDir = "r";
+                        break;
+                }
+                if (newDir != null) {
+                    if (validDirections.includes(newDir)) {
+                        console.log(`(${i}) overwriting dir ${tile.direction} with ${newDir}`);
+                        tile.direction = newDir;
+                    }
+                    else {
+                        console.log(`${newDir} not valid?`);
+                    }
+                }
+
+                //console.log(tile);
+                let result = checkTrack(track, tile);
+                if (result == 1) { // goal
+                    track.push(tile);
+                    console.log("end");
+                    i = cap;
+                    break;
+                }
+                else if (result == 0) { // no collision
+                    // use tile
+                    usedTracktypes[tile.trackType]++;
+                    track.push(tile);
+                    // if we're not at the last tile, this is just a valid tile
+                    if (i != cap - 1)
+                        continue;
+
+                    console.error("did not reach end");
+                    track.pop();
+                    usedTracktypes[tile.trackType]--;
+                }
+                // collision
+                // dont use tile
+                if (used[i][tile.trackType]) {
+                    used[i][tile.trackType].directions.push(tile.direction);
+                } else {
+                    used[i][tile.trackType] = {
+                        triedAll: false,
+                        directions: [tile.direction]
+                    };
+                }
+                tile = null;
             }
         }
         console.log("track:");
         console.log(track);
-        this.buildTrack({tiles: track.map(t => new Tile(t.type, getRotationFromDirection(t)))});
+        //TODO: randomize straight rotation
+        this.buildTrack({tiles: track.map(t => new Tile(t.type ?? getRandomType(t.trackType), getRotationFromDirection(t)))});
     }
 }
