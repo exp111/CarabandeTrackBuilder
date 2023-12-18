@@ -4,6 +4,7 @@ const snapZone = 10;
 function createCanvas() {
     Global.stage = new Konva.Stage({
         container: 'canvas',   // id of container <div>
+        draggable: true
     });
     Global.stage.on('contextmenu', function (e) {
         // prevent default behavior
@@ -14,10 +15,7 @@ function createCanvas() {
 
     function setCanvasSize() {
         Global.stage.width(window.innerWidth);
-        let height = window.innerHeight;
-        if (Global.IsDebug)
-            height -= 25;
-        Global.stage.height(height);
+        Global.stage.height(window.innerHeight);
     }
 
     // listen to resize
@@ -51,7 +49,7 @@ function moveGroupToSnapzone(group, otherGroup, zone, otherZone) {
     trackPosDiff = Vector.normalize(trackPosDiff);
     newPos.x += trackPosDiff.x * nobLength;
     newPos.y += trackPosDiff.y * nobLength;
-    group.position(newPos);
+    group.absolutePosition(newPos);
     // mark snapzone as used so we cant double use a snap
     zone.attrs.snap = otherZone;
     otherZone.attrs.snap = zone;
@@ -270,7 +268,7 @@ function clearTracks() {
         let x = tilesAdded % tilesPerRow * (presetRect.x2 - presetRect.x1 / tilesPerRow) + presetRect.x1;
         let y = Math.floor(tilesAdded / tilesPerRow) * 100 + presetRect.y1;
         tile.rotation(0);
-        tile.position(new Vector(x, y));
+        tile.absolutePosition(new Vector(x, y));
         tile.children.filter(c => c.attrs.tag == "snapzone").forEach(z => z.attrs.snap = null);
         tilesAdded++;
     }

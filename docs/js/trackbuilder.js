@@ -1,6 +1,6 @@
 const trackArea = {
     x1: presetRect.x2, y1: presetRect.y1,
-    x2: window.innerWidth, y2: window.innerHeight
+    x2: presetRect.x2 + 1000, y2: presetRect.y2 + 1000
 };
 
 class Tile {
@@ -86,7 +86,7 @@ class Trackbuilder {
             tile.rotation(info.Angle);
             // first tile, place it at the center of the area
             if (prevTile == null) {
-                tile.position({
+                tile.absolutePosition({
                     x: trackArea.x1 + (trackArea.x2 - trackArea.x1) / 2,
                     y: trackArea.y1 + (trackArea.y2 - trackArea.y1) / 2
                 });

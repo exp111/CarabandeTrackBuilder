@@ -43,35 +43,41 @@
         Global.forceShowSnapzones = val;
         toggleSnapzones(val);
     }
+
     function serializeTrack() {
         console.log(Global.trackbuilder.serializeTrack());
     }
+
     function disableSnapping(val) {
         Global.disableSnapping = val;
     }
+
     function onTrackChange(val) {
         clearTracks();
         Global.trackbuilder.onTrackSelect(val);
     }
+
     function clearButton() {
         tracks.selectedIndex = 0;
         clearTracks();
     }
+
     function randomTrack() {
         clearTracks();
         let min = Number(randomMin.value);
         let cap = Number(randomMax.value);
         Global.trackbuilder.random(min, cap);
     }
+
     function randomMinMaxChange(el) {
         // keeps min <= max and max >= min
         if (el == randomMin) {
             randomMax.value = Math.max(el.value, randomMax.value);
-        }
-        else if (el == randomMax) {
+        } else if (el == randomMax) {
             randomMin.value = Math.min(randomMin.value, el.value);
         }
     }
+
     createCanvas();
     initPresets();
 </script>
