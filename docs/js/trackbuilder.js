@@ -199,18 +199,13 @@ class Trackbuilder {
             return Math.floor(Math.random() * arr.length)
         }
 
-        function getRandomTile(used, suggestion) {
+        function getRandomTile(used) {
             let types = ["straight", "curve"];
             //TODO: change odds to be relative to the amount of tiles
             // filter out any tracktypes that are not available anymore or were already tried
             types = types.filter(t => availableTracktypes[t] > usedTracktypes[t] && !(used[t] != null && used[t].triedAll));
             if (types.length == 0)
                 return null;
-            if (suggestion != null) {
-                if (types.includes(suggestion))
-                    return {trackType: suggestion};
-                else return null;
-            }
 
             let index = randomIndex(types);
             return {
@@ -360,21 +355,11 @@ class Trackbuilder {
                 used[i] = {};
             while (tile == null) {
                 // get a random tile
-                let suggestion = null;
-                switch (i) {
-                    case 1:
-                    case 2:
-                    case 4:
-                    case 5:
-                        suggestion = "curve";
-                        break;
-                    case 3:
-                        suggestion = "straight";
-                        break;
-                }
-                tile = getRandomTile(used[i], suggestion);
+                tile = getRandomTile(used[i]);
 
                 //TODO: we can optimize this by checking if we can potentially go from that tile in cap-i steps to the goal
+
+                // if we dont get a tile here, we need to go back one step
                 if (tile == null) {
                     console.error(`no tiles available ${i}`);
                     for (let j in used[i]) {
@@ -402,7 +387,6 @@ class Trackbuilder {
                     }
                     continue;
                 }
-                //TODO: if we dont get a tile here, we need to go back one step
                 //valid rotations //TODO: skew
                 let prev = track[track.length - 1];
                 let validDirections = getValidDirection(prev, tile);
@@ -421,34 +405,6 @@ class Trackbuilder {
 
                 // getrandomrotation
                 tile.direction = validDirections[randomIndex(validDirections)];
-
-                let newDir = null;
-                switch (i) {
-                    case 1:
-                        newDir = "u";
-                        break;
-                    case 2:
-                        newDir = "l";
-                        break;
-                    case 3:
-                        newDir = "l";
-                        break;
-                    case 4:
-                        newDir = "d";
-                        break;
-                    case 5:
-                        newDir = "r";
-                        break;
-                }
-                if (newDir != null) {
-                    if (validDirections.includes(newDir)) {
-                        console.log(`(${i}) overwriting dir ${tile.direction} with ${newDir}`);
-                        tile.direction = newDir;
-                    }
-                    else {
-                        console.log(`${newDir} not valid?`);
-                    }
-                }
 
                 //console.log(tile);
                 let result = checkTrack(track, tile);
