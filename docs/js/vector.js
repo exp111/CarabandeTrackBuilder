@@ -10,6 +10,7 @@ class Vector {
     static magnitude(vec) {
         return Math.sqrt(Math.pow(vec.x, 2) + Math.pow(vec.y, 2));
     }
+
     static normalize(vec) {
         let mag = Vector.magnitude(vec)
         if (mag == 0)
@@ -27,5 +28,9 @@ class Vector {
 
     static diff(a, b) {
         return new Vector(a.x - b.x, a.y - b.y);
+    }
+
+    static dot(a, b) {
+        return a.x * b.x + a.y * b.y;
     }
 }

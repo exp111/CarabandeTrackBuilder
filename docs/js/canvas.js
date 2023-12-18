@@ -112,11 +112,12 @@ function checkSnap(group) {
         // get the other track
         let otherChildren = g.getChildren();
         let otherTrack = otherChildren.find(n => n.attrs.tag == "track");
+        let otherTrackPos = otherTrack.absolutePosition();
         // filter out zones that are already snapped
         let otherZones = otherChildren.filter(n => n.attrs.tag == "snapzone" && n.attrs.snap == null);
         // find the nearest snapzones
         let nearest = otherZones.sort((a, b) => Vector.dist(a.absolutePosition(), pos) - Vector.dist(b.absolutePosition(), pos))[0];
-        let nearestOther = snapZones.sort((a, b) => Vector.dist(a.absolutePosition(), otherTrack.absolutePosition()) - Vector.dist(b.absolutePosition(), otherTrack.absolutePosition()))[0];
+        let nearestOther = snapZones.sort((a, b) => Vector.dist(a.absolutePosition(), otherTrackPos) - Vector.dist(b.absolutePosition(), otherTrackPos))[0];
         if (nearest == null || nearestOther == null)
             continue;
         // check the rotation
@@ -127,8 +128,14 @@ function checkSnap(group) {
         nearestOtherRot = Math.round((nearestOtherRot + 180) % 180);
         if (nearestRot != nearestOtherRot)
             continue;
-        //TODO: disallow overlaying snaps
         if (haveIntersection(nearest.getClientRect(), nearestOther.getClientRect())) {
+            // disallow overlaying snaps
+            // check if the direction from the group origin to the snapzone is the same for both zones (dot product > 0
+            let dot = Vector.dot(Vector.diff(nearest.absolutePosition(), otherTrackPos), Vector.diff(nearestOther.absolutePosition(), pos));
+            if (dot > 0) {
+                console.error("detected overlap");
+                break;
+            }
             moveGroupToSnapzone(group, g, nearestOther, nearest);
             break;
         }
