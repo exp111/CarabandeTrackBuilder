@@ -193,13 +193,14 @@ class Trackbuilder {
         }
         //console.debug("availableTiles:");
         //console.debug(availableTiles);
+        let existingTypes = Object.keys(availableTracktypes);
         let usedTiles = {};
         let usedTracktypes = {};
         for (let i in availableTracktypes)
             usedTracktypes[i] = 0;
 
         function randomIndex(arr) {
-            return Math.floor(Math.random() * arr.length)
+            return Math.floor(Math.random() * arr.length);
         }
 
         function randomElement(arr) {
@@ -207,15 +208,28 @@ class Trackbuilder {
         }
 
         function getRandomTile(used) {
-            let types = ["straight", "curve"];
-            //TODO: change odds to be relative to the amount of tiles
+            let types = existingTypes;
             // filter out any tracktypes that are not available anymore or were already tried
             types = types.filter(t => availableTracktypes[t] > usedTracktypes[t] && !(used[t] != null && used[t].triedAll));
             if (types.length == 0)
                 return null;
 
+            // calculate the odds of each tile
+            let tresholds = [];
+            let current = 0;
+            for (let i in types) {
+                let type = types[i];
+                tresholds.push({type: type, treshold: current + (availableTracktypes[type] - usedTracktypes[type])});
+            }
+            let last = tresholds[tresholds.length - 1];
+            // max number we can get
+            let max = current + (availableTracktypes[last.type] - usedTracktypes[last.type]);
+            let val = Math.floor(Math.random() * max);
+            // find in which type range the generated number falls in
+            let type = tresholds.find(t => t.treshold > val);
+
             return {
-                trackType: randomElement(types)
+                trackType: type.type
             };
         }
 
