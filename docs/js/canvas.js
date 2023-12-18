@@ -28,6 +28,7 @@ function isInside(r1, p) {
     return (p.x >= r1.x && p.x <= r1.x + r1.width) &&
         (p.y >= r1.y && p.y <= r1.y + r1.height);
 }
+
 function haveIntersection(r1, r2) {
     return !(
         r2.x > r1.x + r1.width ||
@@ -168,6 +169,11 @@ function addTrack(type, url, x, y, index) {
 
             group.on("mousedown", (e) => {
                 if (e.evt.button != 2)
+                    return;
+                group.rotate(45);
+            });
+            group.on("dblclick dbltap", (e) => {
+                if (e.evt.button == 2) // dont rotate on right click double click
                     return;
                 group.rotate(45);
             });
