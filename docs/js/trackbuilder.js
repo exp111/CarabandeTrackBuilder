@@ -63,7 +63,6 @@ class Trackbuilder {
             console.error(`No track with name ${name} found.`);
             return;
         }
-        //TODO: reset beforehand?
         this.buildTrack(track);
     }
 
@@ -219,11 +218,16 @@ class Trackbuilder {
             let current = 0;
             for (let i in types) {
                 let type = types[i];
-                tresholds.push({type: type, treshold: current + (availableTracktypes[type] - usedTracktypes[type])});
+                let treshold = {
+                    type: type,
+                    treshold: current + (availableTracktypes[type] - usedTracktypes[type])
+                };
+                tresholds.push(treshold);
+                current = treshold.treshold;
             }
             let last = tresholds[tresholds.length - 1];
             // max number we can get
-            let max = current + (availableTracktypes[last.type] - usedTracktypes[last.type]);
+            let max = last.treshold;
             let val = Math.floor(Math.random() * max);
             // find in which type range the generated number falls in
             let type = tresholds.find(t => t.treshold > val);
@@ -291,10 +295,6 @@ class Trackbuilder {
                     switch (next.trackType) {
                         case "straight":
                             return [prev.direction];
-                            if (prev.direction == "l" || prev.direction == "r")
-                                return ["l", "r"];
-                            if (prev.direction == "u" || prev.direction == "d")
-                                return ["u", "d"];
                         case "curve":
                             if (prev.direction == "l" || prev.direction == "r")
                                 return ["u", "d"];
@@ -306,10 +306,6 @@ class Trackbuilder {
                     switch (next.trackType) {
                         case "straight":
                             return [prev.direction];
-                            if (prev.direction == "l" || prev.direction == "r")
-                                return ["l", "r"];
-                            if (prev.direction == "u" || prev.direction == "d")
-                                return ["u", "d"];
                         case "curve":
                             if (prev.direction == "l" || prev.direction == "r")
                                 return ["u", "d"];
