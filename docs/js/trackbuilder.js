@@ -193,7 +193,7 @@ class Trackbuilder {
                         index: index,
                         type: availableTiles[index].type,
                         trackType: availableTiles[index].trackType,
-                        rotation: 0
+                        direction: null
                     };
                 }
             }
@@ -207,42 +207,59 @@ class Trackbuilder {
             return false;
         }
 
-        function getValidRotations(prev, next) {
-            let isSkewed = (prev.rotation / 45) % 2 != 0;
-            //TODO: isskewed
+        function getValidDirection(prev, next) {
+            //TODO: skewed directions
+            next.prevDirection = prev.direction;
             switch (prev.trackType) {
                 case "straight": {
                     switch (next.trackType) {
                         case "straight":
-                            if (prev.rotation == 0 || prev.rotation == 180)
-                                return [0, 180];
-                            else if (prev.rotation == 90 || prev.rotation == 270)
-                                return [90, 270];
+                            return [prev.direction];
+                            if (prev.direction == "l" || prev.direction == "r")
+                                return ["l", "r"];
+                            if (prev.direction == "u" || prev.direction == "d")
+                                return ["u", "d"];
                         case "curve":
-                            if (prev.rotation == 0 || prev.rotation == 180)
-                                return [0, 90];
-                            if (prev.rotation == 90 || prev.rotation == 270)
-                                return [90, 180];
+                            if (prev.direction == "l" || prev.direction == "r")
+                                return ["u", "d"];
+                            if (prev.direction == "u" || prev.direction == "d")
+                                return ["l", "r"];
                     }
                 }
-                case "curve": {
+                case "curve": { //TODO: for curves we also need to look at the prev one
                     switch (next.trackType) {
                         case "straight":
-                            if (prev.rotation == 0 || prev.rotation == 270)
-                                return [90, 270];
-                            if (prev.rotation == 90 || prev.rotation == 270)
-                                return [0, 180];
+                            return [prev.direction];
+                            if (prev.direction == "l" || prev.direction == "r")
+                                return ["l", "r"];
+                            if (prev.direction == "u" || prev.direction == "d")
+                                return ["u", "d"];
                         case "curve":
-                            if (prev.rotation == 0)
-                                return [90, 180];
-                            if (prev.rotation == 90)
-                                return [180, 270];
-                            if (prev.rotation == 180)
-                                return [0, 90];
-                            if (prev.rotation == 270)
-                                return [90, 180];
+                            if (prev.direction == "l" || prev.direction == "r")
+                                return ["u", "d"];
+                            if (prev.direction == "u" || prev.direction == "d")
+                                return ["l", "r"];
                     }
                 }
+            }
+        }
+
+        function getRotationFromDirection(tile) {
+            switch (tile.trackType) {
+                case "straight":
+                    switch (tile.direction) {
+                        case "l": return 270;
+                        case "r": return 90;
+                        case "u": return 0;
+                        case "d": return 180;
+                    }
+                case "curve":
+                    switch (tile.direction) {
+                        case "l": return tile.prevDirection == "u" ? 90 : 180;
+                        case "r": return tile.prevDirection == "u" ? 0 : 270;
+                        case "u": return tile.prevDirection == "r" ? 180 : 270;
+                        case "d": return tile.prevDirection == "r" ? 90 : 0;
+                    }
             }
         }
 
@@ -252,15 +269,16 @@ class Trackbuilder {
         for (let i = 0; i < cap; i++) {
             let tile = null;
             while (tile == null) {
-                tile = getRandomTile();
+                // force start to be the first tile, else use a random tile
+                tile = i == 0 ? {index: 0, type: "start", trackType: "straight"} : getRandomTile();
                 //valid rotations //TODO: skew
-                let validRotations = [0, 90, 180, 270]
+                let validDirections = ["r"] //TODO: allow other start directions than r (needs to be fixed in the track builder)
                 if (track.length != 0) {
                     let prev = track[track.length - 1];
-                    validRotations = getValidRotations(prev, tile);
+                    validDirections = getValidDirection(prev, tile);
                 }
                 // getrandomrotation
-                tile.rotation = validRotations[randomIndex(validRotations)];
+                tile.direction = validDirections[randomIndex(validDirections)];
                 console.log(tile);
                 if (checkForCollision()) {
                     // dont use tile
@@ -278,6 +296,6 @@ class Trackbuilder {
         }
         console.log("track:");
         console.log(track);
-        this.buildTrack({tiles: track.map(t => new Tile(t.type, t.rotation))});
+        this.buildTrack({tiles: track.map(t => new Tile(t.type, getRotationFromDirection(t)))});
     }
 }
