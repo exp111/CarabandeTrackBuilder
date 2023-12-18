@@ -158,4 +158,126 @@ class Trackbuilder {
         track.tiles = tiles.map(t => new Tile(t.attrs.type, t.rotation()));
         return track;
     }
+
+    random() {
+        let availableTiles = [];
+        for (let i in Global.tiles) {
+            let tile = Global.tiles[i];
+            let type = tile.attrs.trackType;
+            switch (type) {
+                case "ramp":
+                case "rampEnd":
+                    //TODO: add ramp
+                    break;
+                default:
+                    availableTiles.push({
+                        type: tile.attrs.type,
+                        trackType: type
+                    });
+                    break;
+            }
+
+        }
+        console.log("availableTiles:");
+        console.log(availableTiles);
+        let usedTiles = {};
+
+        function randomIndex(arr) {
+            return Math.floor(Math.random() * arr.length)
+        }
+        function getRandomTile() {
+            while (true) {
+                let index = randomIndex(availableTiles);
+                if (!usedTiles[index]) {
+                    return {
+                        index: index,
+                        type: availableTiles[index].type,
+                        trackType: availableTiles[index].trackType,
+                        rotation: 0
+                    };
+                }
+            }
+        }
+
+        function checkForEnd(track) {
+            return false;
+        }
+
+        function checkForCollision(track, tile) {
+            return false;
+        }
+
+        function getValidRotations(prev, next) {
+            let isSkewed = (prev.rotation / 45) % 2 != 0;
+            //TODO: isskewed
+            switch (prev.trackType) {
+                case "straight": {
+                    switch (next.trackType) {
+                        case "straight":
+                            if (prev.rotation == 0 || prev.rotation == 180)
+                                return [0, 180];
+                            else if (prev.rotation == 90 || prev.rotation == 270)
+                                return [90, 270];
+                        case "curve":
+                            if (prev.rotation == 0 || prev.rotation == 180)
+                                return [0, 90];
+                            if (prev.rotation == 90 || prev.rotation == 270)
+                                return [90, 180];
+                    }
+                }
+                case "curve": {
+                    switch (next.trackType) {
+                        case "straight":
+                            if (prev.rotation == 0 || prev.rotation == 270)
+                                return [90, 270];
+                            if (prev.rotation == 90 || prev.rotation == 270)
+                                return [0, 180];
+                        case "curve":
+                            if (prev.rotation == 0)
+                                return [90, 180];
+                            if (prev.rotation == 90)
+                                return [180, 270];
+                            if (prev.rotation == 180)
+                                return [0, 90];
+                            if (prev.rotation == 270)
+                                return [90, 180];
+                    }
+                }
+            }
+        }
+
+        let cap = 6;
+        let track = [];
+        console.log("track gen:");
+        for (let i = 0; i < cap; i++) {
+            let tile = null;
+            while (tile == null) {
+                tile = getRandomTile();
+                //valid rotations //TODO: skew
+                let validRotations = [0, 90, 180, 270]
+                if (track.length != 0) {
+                    let prev = track[track.length - 1];
+                    validRotations = getValidRotations(prev, tile);
+                }
+                // getrandomrotation
+                tile.rotation = validRotations[randomIndex(validRotations)];
+                console.log(tile);
+                if (checkForCollision()) {
+                    // dont use tile
+                    tile = null;
+                } else {
+                    usedTiles[tile.index] = true;
+                    // use tile
+                    track.push(tile);
+                    // if end, its a valid track
+                    if (checkForEnd()) {
+                        break;
+                    }
+                }
+            }
+        }
+        console.log("track:");
+        console.log(track);
+        this.buildTrack({tiles: track.map(t => new Tile(t.type, t.rotation))});
+    }
 }

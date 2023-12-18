@@ -130,7 +130,7 @@ function checkSnap(group) {
             continue;
         if (haveIntersection(nearest.getClientRect(), nearestOther.getClientRect())) {
             // disallow overlaying snaps
-            // check if the direction from the group origin to the snapzone is the same for both zones (dot product > 0
+            // check if the direction from the group origin to the snapzone is the same for both zones (dot product > 0)
             let dot = Vector.dot(Vector.diff(nearest.absolutePosition(), otherTrackPos), Vector.diff(nearestOther.absolutePosition(), pos));
             if (dot > 0) {
                 console.error("detected overlap");
@@ -145,10 +145,18 @@ function checkSnap(group) {
 function addTrack(type, url, x, y, index) {
     let promise = new Promise((resolve, reject) => {
         Konva.Image.fromURL(url, function (track) {
+            let trackType = type;
+            switch (type) {
+                case "xstraight":
+                case "ystraight":
+                case "start":
+                    trackType = "straight";
+            }
             var group = new Konva.Group({
                 x: x,
                 y: y,
                 type: type,
+                trackType: trackType,
                 draggable: true,
             });
             let width = track.width();
@@ -192,13 +200,6 @@ function addTrack(type, url, x, y, index) {
                 });
             }
 
-            let trackType = type;
-            switch (type) {
-                case "xstraight":
-                case "ystraight":
-                case "start":
-                    trackType = "straight";
-            }
             switch (trackType) {
                 case "straight": {
                     let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
