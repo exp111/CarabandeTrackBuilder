@@ -162,7 +162,7 @@ class Trackbuilder {
         return track;
     }
 
-    random(max) {
+    random(min, max) {
         let availableTiles = [];
         let availableTracktypes = {};
         for (let i in Global.tiles) {
@@ -376,6 +376,7 @@ class Trackbuilder {
                     i--;
                     if (i < 1) {
                         console.error("oob");
+                        alert(`Could not find a track with a minimum of ${min} and a maximum of ${max} tiles.`);
                         i = max;
                         break;
                     }
@@ -412,21 +413,22 @@ class Trackbuilder {
                 //console.debug(tile);
                 let result = checkTrack(track, tile);
                 if (result == 1) { // goal
-                    track.push(tile);
-                    console.debug("end");
-                    i = max;
-                    break;
+                    if (i >= (min - 1)) { // if we meet the minimum amount of tiles, we can quit
+                        track.push(tile);
+                        console.debug("end");
+                        i = max;
+                        break;
+                    }
+                    // else let it count as a collision
                 } else if (result == 0) { // no collision
                     // use tile
-                    usedTracktypes[tile.trackType]++;
-                    track.push(tile);
-                    // if we're not at the last tile, this is just a valid tile
-                    if (i != max - 1)
+                    if (i < max - 1) { // if we're not at the last tile, this is just a valid tile
+                        usedTracktypes[tile.trackType]++;
+                        track.push(tile);
                         continue;
-
+                    }
+                    // else we have the maximum amount of tiles but didnt reach the finish, so count it as a collision
                     //console.debug("did not reach end");
-                    track.pop();
-                    usedTracktypes[tile.trackType]--;
                 }
                 // collision
                 // dont use tile
@@ -443,11 +445,13 @@ class Trackbuilder {
         }
         //console.debug("track:");
         //console.debug(track);
-        this.buildTrack({tiles: track.map(t =>
+        this.buildTrack({
+            tiles: track.map(t =>
                 new Tile(
                     // if the type is already set use that, otherwise get a random available one for the track type
                     t.type ?? getRandomType(t.trackType),
                     // get the rotation through the direction (and randomize if its a straight)
-                    getRotationFromDirection(t, true)))});
+                    getRotationFromDirection(t, true)))
+        });
     }
 }

@@ -18,8 +18,11 @@
     </select>
     <button onclick="clearButton()">Clear</button>
     <button onclick="randomTrack()">Random</button>
-    <input id="randomCap" type="number" value="10" min="6" max="30">
-    <label for="randomCap">Max Tiles</label>
+    <label for="randomMin">Min Tiles</label>
+    <!--You can not have a track with an odd number of tiles-->
+    <input id="randomMin" type="number" value="6" min="6" max="30" step="2" onchange="randomMinMaxChange(this)">
+    <label for="randomMax">Max Tiles</label>
+    <input id="randomMax" type="number" value="10" min="6" max="30" step="2" onchange="randomMinMaxChange(this)">
 </div>
 <div id="canvas"></div>
 </body>
@@ -56,8 +59,18 @@
     }
     function randomTrack() {
         clearTracks();
-        let cap = randomCap.value;
-        Global.trackbuilder.random(cap);
+        let min = Number(randomMin.value);
+        let cap = Number(randomMax.value);
+        Global.trackbuilder.random(min, cap);
+    }
+    function randomMinMaxChange(el) {
+        // keeps min <= max and max >= min
+        if (el == randomMin) {
+            randomMax.value = Math.max(el.value, randomMax.value);
+        }
+        else if (el == randomMax) {
+            randomMin.value = Math.min(randomMin.value, el.value);
+        }
     }
     createCanvas();
     initPresets();
