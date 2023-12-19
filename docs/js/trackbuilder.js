@@ -269,19 +269,24 @@ class Trackbuilder {
             let y = 0;
 
             function next(direction) {
-                switch (direction) {
-                    case "l":
-                        x--;
-                        break;
-                    case "r":
-                        x++;
-                        break;
-                    case "u":
-                        y++;
-                        break;
-                    case "d":
-                        y--;
-                        break;
+                // skewed dirs can be calculated the same way (up gives y++, down gives y--)
+                // so iterate over all chars
+                for (let i in direction) {
+                    let dir = direction[i];
+                    switch (dir) {
+                        case "l":
+                            x--;
+                            break;
+                        case "r":
+                            x++;
+                            break;
+                        case "u":
+                            y++;
+                            break;
+                        case "d":
+                            y--;
+                            break;
+                    }
                 }
             }
 
@@ -314,7 +319,6 @@ class Trackbuilder {
         }
 
         function getValidDirection(prev, next) {
-            //TODO: skewed directions
             next.prevDirection = prev.direction;
             switch (prev.trackType) {
                 case "straight": {
@@ -322,6 +326,10 @@ class Trackbuilder {
                         case "straight":
                             return [prev.direction];
                         case "curve":
+                            if (prev.direction == "ul" || prev.direction == "dr")
+                                return ["dl", "ur"];
+                            if (prev.direction == "ur" || prev.direction == "dl")
+                                return ["dr", "ul"];
                             if (prev.direction == "l" || prev.direction == "r")
                                 return ["u", "d"];
                             if (prev.direction == "u" || prev.direction == "d")
@@ -333,6 +341,10 @@ class Trackbuilder {
                         case "straight":
                             return [prev.direction];
                         case "curve":
+                            if (prev.direction == "ul" || prev.direction == "dr")
+                                return ["dl", "ur"];
+                            if (prev.direction == "ur" || prev.direction == "dl")
+                                return ["ul", "dr"];
                             if (prev.direction == "l" || prev.direction == "r")
                                 return ["u", "d"];
                             if (prev.direction == "u" || prev.direction == "d")
@@ -345,28 +357,44 @@ class Trackbuilder {
         }
 
         function getRotationFromDirection(tile, randomizeStraight) {
+            let direction = tile.direction;
+            let offset = 0;
+            // if we have a skewed dir, we need to offset the pos by 45/-45 degrees
+            if (direction.length > 1) {
+                switch (direction) {
+                    case "ur":
+                    case "dl":
+                        offset = -45;
+                        break;
+                    case "ul":
+                    case "dr":
+                        offset = 45;
+                }
+                direction = direction[1];
+            }
+            let prevDirection = tile.prevDirection != null ? tile.prevDirection[0] : null;
             switch (tile.trackType) {
                 case "straight":
-                    switch (tile.direction) {
+                    switch (direction) {
                         case "l":
-                            return randomizeStraight ? randomElement([90, 270]) : 270;
+                            return offset + (randomizeStraight ? randomElement([90, 270]) : 270);
                         case "r":
-                            return randomizeStraight ? randomElement([90, 270]) : 90;
+                            return offset + (randomizeStraight ? randomElement([90, 270]) : 90);
                         case "u":
-                            return randomizeStraight ? randomElement([0, 180]) : 0;
+                            return offset + (randomizeStraight ? randomElement([0, 180]) : 0);
                         case "d":
-                            return randomizeStraight ? randomElement([0, 180]) : 180;
+                            return offset + (randomizeStraight ? randomElement([0, 180]) : 180);
                     }
                 case "curve":
-                    switch (tile.direction) {
+                    switch (direction) {
                         case "l":
-                            return tile.prevDirection == "u" ? 90 : 180;
+                            return offset + (prevDirection == "u" ? 90 : 180);
                         case "r":
-                            return tile.prevDirection == "u" ? 0 : 270;
+                            return offset + (prevDirection == "u" ? 0 : 270);
                         case "u":
-                            return tile.prevDirection == "r" ? 180 : 270;
+                            return offset + (prevDirection == "r" ? 180 : 270);
                         case "d":
-                            return tile.prevDirection == "r" ? 90 : 0;
+                            return offset + (prevDirection == "r" ? 90 : 0);
                     }
             }
         }
@@ -389,7 +417,7 @@ class Trackbuilder {
         let used = {}
         //console.debug("track gen:");
         // force the start as the first tile
-        track.push({type: "start", trackType: "straight", direction: "r"})//TODO: allow other start directions than r (needs to be fixed in the track builder)
+        track.push({type: "start", trackType: "straight", direction: "r"})//TODO: allow other start directions than (u/d)r (needs to be fixed in the track builder)
         // mark them as used
         usedTracktypes["straight"]++;
         usedTiles[availableTiles.find(t => t.type == "start").index] = true;
@@ -482,8 +510,8 @@ class Trackbuilder {
                 tile = null;
             }
         }
-        //console.debug("track:");
-        //console.debug(track);
+        console.debug("track:");
+        console.debug(track);
         this.buildTrack({
             tiles: track.map(t =>
                 new Tile(
