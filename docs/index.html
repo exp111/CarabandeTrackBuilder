@@ -45,7 +45,9 @@
     }
 
     function serializeTrack() {
-        console.log(Global.trackbuilder.serializeTrack());
+        let track = Global.trackbuilder.serializeTrack();
+        console.log(track);
+        console.log(JSON.stringify(track));
     }
 
     function disableSnapping(val) {
