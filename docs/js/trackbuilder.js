@@ -48,6 +48,32 @@ class Trackbuilder {
             new Tile("curve", 90),
             new Tile("ramp", 90),
         ]
+    }, {
+        name: "Jump To Finish",
+        tiles: [
+            new Tile("ramp", 90),
+            new Tile("curve", 90),
+            new Tile("straight", 180),
+            new Tile("curve", 180),
+            new Tile("straight", 270),
+            new Tile("curve", 270),
+            new Tile("straight", 0),
+            new Tile("straight", 0),
+            new Tile("curve", 90),
+            new Tile("ystraight", 270),
+            new Tile("straight", 90),
+            new Tile("curve", 0),
+            new Tile("curve", 180),
+            new Tile("curve", 0),
+            new Tile("curve", 270),
+            new Tile("curve", 90),
+            new Tile("curve", 270),
+            new Tile("curve", 180),
+            new Tile("xstraight", 0),
+            new Tile("curve", 0),
+            new Tile("start", 90),
+            new Tile("rampEnd", 270),
+        ]
     }];
 
     constructor(select) {
