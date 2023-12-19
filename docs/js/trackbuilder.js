@@ -320,37 +320,18 @@ class Trackbuilder {
 
         function getValidDirection(prev, next) {
             next.prevDirection = prev.direction;
-            switch (prev.trackType) {
-                case "straight": {
-                    switch (next.trackType) {
-                        case "straight":
-                            return [prev.direction];
-                        case "curve":
-                            if (prev.direction == "ul" || prev.direction == "dr")
-                                return ["dl", "ur"];
-                            if (prev.direction == "ur" || prev.direction == "dl")
-                                return ["dr", "ul"];
-                            if (prev.direction == "l" || prev.direction == "r")
-                                return ["u", "d"];
-                            if (prev.direction == "u" || prev.direction == "d")
-                                return ["l", "r"];
-                    }
-                }
-                case "curve": {
-                    switch (next.trackType) {
-                        case "straight":
-                            return [prev.direction];
-                        case "curve":
-                            if (prev.direction == "ul" || prev.direction == "dr")
-                                return ["dl", "ur"];
-                            if (prev.direction == "ur" || prev.direction == "dl")
-                                return ["ul", "dr"];
-                            if (prev.direction == "l" || prev.direction == "r")
-                                return ["u", "d"];
-                            if (prev.direction == "u" || prev.direction == "d")
-                                return ["l", "r"];
-                    }
-                }
+            switch (next.trackType) {
+                case "straight":
+                    return [prev.direction];
+                case "curve":
+                    if (prev.direction == "ul" || prev.direction == "dr")
+                        return ["dl", "ur"];
+                    if (prev.direction == "ur" || prev.direction == "dl")
+                        return ["dr", "ul"];
+                    if (prev.direction == "l" || prev.direction == "r")
+                        return ["u", "d"];
+                    if (prev.direction == "u" || prev.direction == "d")
+                        return ["l", "r"];
             }
             console.error("Could not get a valid direction");
             return null;
