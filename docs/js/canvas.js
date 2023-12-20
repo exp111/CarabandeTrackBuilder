@@ -331,6 +331,7 @@ class Canvas {
     }
 
     resetTracks(pack = null) {
+        //FIXME: if you do enable base+addon, then disable and enable base again they will overlap //instead reset all tracks inside the area
         for (let i in Global.tiles) {
             let tile = Global.tiles[i];
             // if we have a pack id, check for that

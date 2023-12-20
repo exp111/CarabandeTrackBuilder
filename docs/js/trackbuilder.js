@@ -91,7 +91,26 @@ class Trackbuilder {
         this.buildTrack(track);
     }
 
+    checkRequiredTiles(track) {
+        let usedTiles = [];
+        for (let i in track.tiles) {
+            let tile = track.tiles[i];
+            let type = tile.Type;
+            // check if a tile with that type exists
+            let index = Global.tiles.findIndex((t,i) => t.attrs.type == type && !usedTiles[i]);
+            if (index >= 0)
+                usedTiles[index] = true;
+            else
+                return false;
+        }
+        return true;
+    }
+
     buildTrack(track) {
+        if (!this.checkRequiredTiles(track)) {
+            alert("Not enough tiles to build this track.");
+            return;
+        }
         let usedTiles = [];
         let prevTile = null;
         let nextZone = null;
