@@ -29,12 +29,14 @@
 <script src="js/vector.js"></script>
 <script src="js/canvas.js"></script>
 <script src="js/trackbuilder.js"></script>
+<script src="js/trackgenerator.js"></script>
 <script>
     const Global = {
         forceShowSnapzones: false,
         disableSnapping: false,
         IsDebug: window.location.protocol == "file:" || window.location.hostname == "localhost",
         trackbuilder: new Trackbuilder(tracks),
+        trackgenerator: new Trackgenerator(),
     }
     debug.hidden = !Global.IsDebug;
     Global.forceShowSnapzones = Global.IsDebug;
@@ -67,8 +69,9 @@
     function randomTrack() {
         clearTracks();
         let min = Number(randomMin.value);
-        let cap = Number(randomMax.value);
-        Global.trackbuilder.random(min, cap);
+        let max = Number(randomMax.value);
+        let track = Global.trackgenerator.generateTrack(min, max);
+        Global.trackbuilder.buildTrack(track);
     }
 
     function randomMinMaxChange(el) {
