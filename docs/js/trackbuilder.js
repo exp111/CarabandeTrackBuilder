@@ -1,8 +1,3 @@
-const trackArea = {
-    x1: presetRect.x2, y1: presetRect.y1,
-    x2: presetRect.x2 + 1000, y2: presetRect.y2 + 1000
-};
-
 class Tile {
     Type = "";
     Angle = 0;
@@ -14,6 +9,10 @@ class Tile {
 }
 
 class Trackbuilder {
+    static trackArea = {
+        x1: Canvas.presetRect.x2, y1: Canvas.presetRect.y1,
+        x2: Canvas.presetRect.x2 + 1000, y2: Canvas.presetRect.y2 + 1000
+    };
     Tracks = [{
         name: "Default",
         tiles: [
@@ -112,8 +111,8 @@ class Trackbuilder {
             // first tile, place it at the center of the area
             if (prevTile == null) {
                 tile.absolutePosition({
-                    x: trackArea.x1 + (trackArea.x2 - trackArea.x1) / 2,
-                    y: trackArea.y1 + (trackArea.y2 - trackArea.y1) / 2
+                    x: Trackbuilder.trackArea.x1 + (Trackbuilder.trackArea.x2 - Trackbuilder.trackArea.x1) / 2,
+                    y: Trackbuilder.trackArea.y1 + (Trackbuilder.trackArea.y2 - Trackbuilder.trackArea.y1) / 2
                 });
                 // get the zone that is on the right
                 nextZone = tile.children[1];
@@ -136,7 +135,7 @@ class Trackbuilder {
                 };
                 // now find out which actual snapzone is closest to that point
                 let ourZone = zones.sort((a, b) => Vector.dist(a.absolutePosition(), nextZonePos) - Vector.dist(b.absolutePosition(), nextZonePos))[0];
-                moveGroupToSnapzone(tile, prevTile, ourZone, nextZone);
+                Global.canvas.moveGroupToSnapzone(tile, prevTile, ourZone, nextZone);
                 // get the other snapzone for the next tile to snap to
                 nextZone = zones.find(z => z != ourZone);
                 if (nextZone == null) {
