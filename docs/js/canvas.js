@@ -269,6 +269,15 @@ class Canvas {
             ],
             enabled: true,
         },
+        {
+            id: "pitchcar-base",
+            tiles: [
+                "start",
+                "straight", "straight", "straight", "straight", "straight",
+                "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve"
+            ],
+            enabled: true,
+        },
     ];
 
 
@@ -288,7 +297,7 @@ class Canvas {
         return this.addTrack(track, url, 0, 0, packId, index);
     }
 
-    initPresets() {
+    initPresets(baseID) {
         Global.tiles = [];
 
         let promises = [];
@@ -296,6 +305,9 @@ class Canvas {
         for (let i in this.packs) {
             let pack = this.packs[i];
             if (pack.enabled) {
+                if (baseID != null && !pack.id.startsWith(baseID))
+                    continue;
+
                 let packPromises = this.addTracks(pack, index);
                 index += packPromises.length;
                 promises.push(packPromises);

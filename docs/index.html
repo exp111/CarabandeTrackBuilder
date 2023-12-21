@@ -3,6 +3,11 @@
 <head>
     <title>Carabande</title>
     <script src="js/include/konva.min.js"></script>
+    <style>
+        #menu-packs {
+            display: flex;
+        }
+    </style>
 </head>
 <body>
 <div id="debug">
@@ -25,10 +30,20 @@
     <input id="randomMax" type="number" value="10" min="6" max="30" step="2" onchange="randomMinMaxChange(this)">
 </div>
 <div id="menu-packs">
-    <input id="carabande-base" type="checkbox" checked="true" onchange="togglePack(this)">
-    <label for="carabande-base">Carabande</label>
-    <input id="carabande-addon" type="checkbox" checked="true" onchange="togglePack(this)">
-    <label for="carabande-addon">Carabande Action Set</label>
+    <select id="pack-selection" onchange="onPackSelection(this.value)">
+        <option value="carabande" selected>Carabande</option>
+        <option value="pitchcar">PitchCar</option>
+    </select>
+    <div id="carabande">
+        <input id="carabande-base" type="checkbox" checked="true" onchange="togglePack(this)">
+        <label for="carabande-base">Carabande</label>
+        <input id="carabande-addon" type="checkbox" checked="true" onchange="togglePack(this)">
+        <label for="carabande-addon">Carabande Action Set</label>
+    </div>
+    <div id="pitchcar" hidden="hidden">
+        <input id="pitchcar-base" type="checkbox" checked="true" onchange="togglePack(this)">
+        <label for="pitchcar-base">PitchCar</label>
+    </div>
 </div>
 <div id="canvas"></div>
 </body>
@@ -90,6 +105,27 @@
         }
     }
 
+    function onPackSelection(id) {
+        let menu = document.getElementById("menu-packs");
+        let pack = document.getElementById(id);
+        if (!pack) {
+            console.error(`Couldn't find pack element with ID ${id}`);
+            return;
+        }
+        // show this pack
+        pack.hidden = false;
+        // hide all others
+        let divs = menu.getElementsByTagName("div");
+        for (let i = 0; i < divs.length; i++) {
+            let div = divs[i];
+            if (div == pack)
+                continue;
+            div.hidden = true;
+        }
+        Global.canvas.removeTracks();
+        Global.canvas.initPresets(id);
+    }
+
     function togglePack(checkbox) {
         let id = checkbox.id;
         if (id == null) {
@@ -99,7 +135,8 @@
         Global.canvas.togglePack(id, checkbox.checked);
     }
 
+    let select = document.getElementById("pack-selection");
     Global.canvas.createCanvas();
-    Global.canvas.initPresets();
+    Global.canvas.initPresets(select.value);
 </script>
 </html>
