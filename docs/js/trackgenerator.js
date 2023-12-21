@@ -49,6 +49,15 @@ class Trackgenerator {
         let x = 0;
         let y = 0;
 
+        function getLength(type) {
+            switch (type) {
+                case "long":
+                    return 4;
+                default:
+                    return 1;
+            }
+        }
+
         function next(direction) {
             // skewed dirs can be calculated the same way (up gives y++, down gives y--)
             // so iterate over all chars
@@ -73,30 +82,40 @@ class Trackgenerator {
 
         for (let i in track) {
             let t = track[i];
-            grid[x][y] = t;
-            next(t.direction);
-            // check if the column exists
-            if (!grid[x]) {
-                grid[x] = {};
-            }
-            // if the tile is already marked, we have a collision
-            if (grid[x][y]) {
-                return -1;
-            }
-        }
-        next(tile.direction);
-        if (!grid[x]) { // next column doesnt exist, so its empty
-            return 0;
-        }
-        let last = grid[x][y];
-        if (last) {
-            if (last.type == "start") {
-                // if its the start tile, check if the direction of the start tile is valid relative to the last tile,
-                // meaning that the last tile connects properly to the start and doesnt crash into ti
-                return this.getValidDirection(tile, last).includes(last.direction) ? 1 : -1;
-            }
+            let length = getLength(t.trackType);
+            // mark and step length (1-4) times
+            for (let i = 0; i < length; i++) {
+                grid[x][y] = t;
+                next(t.direction);
+                // check if the column exists
+                if (!grid[x]) {
+                    grid[x] = {};
+                }
 
-            return -1; // collision
+                // if the tile is already marked, we have a collision
+                if (grid[x][y]) {
+                    return -1;
+                }
+            }
+        }
+        // do the same for the new last tile
+        let length = getLength(tile.trackType);
+        for (let i = 0; i < length; i++) {
+            next(tile.direction);
+            if (!grid[x]) { // next column doesnt exist, so its empty
+                return 0;
+            }
+            let last = grid[x][y];
+            if (last) {
+                // if we're at the end of the last tile and we reach a tile it could be a start tile
+                if ((i == length - 1) && last.type == "start") {
+                    // if its the start tile, check if the direction of the start tile is valid relative to the last tile,
+                    // meaning that the last tile connects properly to the start and doesnt crash into ti
+                    return this.getValidDirection(tile, last).includes(last.direction) ? 1 : -1;
+                }
+
+                return -1; // collision
+            }
         }
         return 0;
     }
@@ -104,6 +123,7 @@ class Trackgenerator {
     getValidDirection(prev, next) {
         next.prevDirection = prev.direction;
         switch (next.trackType) {
+            case "long":
             case "straight":
                 return [prev.direction];
             case "curve":
@@ -116,7 +136,7 @@ class Trackgenerator {
                 if (prev.direction == "u" || prev.direction == "d")
                     return ["l", "r"];
         }
-        console.error("Could not get a valid direction");
+        console.error(`Could not get a valid direction for type ${next.trackType}`);
         return null;
     }
 
@@ -138,6 +158,7 @@ class Trackgenerator {
         }
         let prevDirection = tile.prevDirection != null ? tile.prevDirection[0] : null;
         switch (tile.trackType) {
+            case "long":
             case "straight":
                 switch (direction) {
                     case "l":
@@ -161,6 +182,8 @@ class Trackgenerator {
                         return offset + (prevDirection == "r" ? 90 : 0);
                 }
         }
+        console.error(`Could not get a rotation from direction ${direction} for type ${tile.trackType}`);
+        return null;
     }
 
     // Gets a random type with the given track type from the available tracks and marks it as used
@@ -184,6 +207,7 @@ class Trackgenerator {
             let tile = Global.tiles[i];
             let trackType = tile.attrs.trackType;
             switch (trackType) {
+                case "long":
                 case "straight":
                 case "curve":
                     this.availableTiles.push({
@@ -199,7 +223,7 @@ class Trackgenerator {
                     break;
                 default:
                     //TODO: add ramp
-                    //TODO: add curve
+                    //TODO: add curve45
                     break;
             }
         }

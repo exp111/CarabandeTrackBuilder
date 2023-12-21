@@ -230,6 +230,7 @@ class Canvas {
                 let snapZone = Canvas.snapZone;
 
                 switch (trackType) {
+                    case "long":
                     case "straight": {
                         let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
                         group.add(snapTop);
@@ -326,6 +327,13 @@ class Canvas {
                 "curve45", "curve45", "curve45", "curve45",
                 "curve", "curve",
                 "straight", "straight",
+            ],
+            enabled: false,
+        },
+        {
+            id: "pitchcar-addon3",
+            tiles: [
+                "long", "long",
             ],
             enabled: false,
         },
