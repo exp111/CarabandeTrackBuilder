@@ -238,13 +238,13 @@ class Canvas {
                         break;
                     }
                     case "curve": { //TODO: i think the right snapzone is off by one?
-                        let snapRight = createSnapzone(-snapZone + 5, -snapZone * 3 + 2, height, snapZone * 3, 90);
+                        let snapRight = createSnapzone(-snapZone + 6, -snapZone * 3 + 2, Canvas.trackWidth + snapZone * 2, snapZone * 3, 90);
                         group.add(snapRight);
-                        let snapBottom = createSnapzone(-width / 2 - snapZone - 3, height / 2 - snapZone * 2, width, snapZone * 3);
+                        let snapBottom = createSnapzone(-width / 2 - snapZone - 1, height / 2 - snapZone * 2, Canvas.trackWidth + snapZone * 2, snapZone * 3);
                         group.add(snapBottom);
                         break;
                     }
-                    case "curve45": { //FIXME: these seem a bit off when snapped to non 45 deg curves
+                    case "curve45": { //FIXME: these seem a bit off when snapped to non 45 deg curves. maybe its the sprite?
                         let snapRight = createSnapzone(-snapZone * 2 - 4, -snapZone * 3 + 3, Canvas.trackWidth + snapZone * 2, snapZone * 3, 45);
                         group.add(snapRight);
                         let snapBottom = createSnapzone(-width / 2 - snapZone, height / 2 - snapZone * 2, Canvas.trackWidth + snapZone * 2, snapZone * 3);
