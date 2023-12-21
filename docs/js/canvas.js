@@ -149,6 +149,13 @@ class Canvas {
         }
     }
 
+    rotateGroup(group, deg = 45) {
+        group.rotate(deg);
+        // remove snapped zones, check new snap
+        this.removeSnap(group);
+        this.checkSnap(group);
+    }
+
     addTrack(type, url, x, y, packId, index) {
         let base = this;
         let promise = new Promise((resolve, reject) => {
@@ -185,13 +192,12 @@ class Canvas {
                 group.on("mousedown", (e) => {
                     if (e.evt.button != 2)
                         return;
-                    group.rotate(45);
-                    //TODO: remove snapped zones, check new snap
+                    base.rotateGroup(group);
                 });
                 group.on("dblclick dbltap", (e) => {
                     if (e.evt.button == 2) // dont rotate on right click double click
                         return;
-                    group.rotate(45);
+                    base.rotateGroup(group);
                 });
 
                 group.on("dragstart", () => {
