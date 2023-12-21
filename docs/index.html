@@ -35,14 +35,18 @@
         <option value="pitchcar">PitchCar</option>
     </select>
     <div id="carabande">
-        <input id="carabande-base" type="checkbox" checked="true" onchange="togglePack(this)">
+        <input id="carabande-base" type="checkbox" checked="checked" onchange="togglePack(this)">
         <label for="carabande-base">Carabande</label>
-        <input id="carabande-addon" type="checkbox" checked="true" onchange="togglePack(this)">
-        <label for="carabande-addon">Carabande Action Set</label>
+        <input id="carabande-addon" type="checkbox" checked="checked" onchange="togglePack(this)">
+        <label for="carabande-addon">Action Set</label>
     </div>
     <div id="pitchcar" hidden="hidden">
-        <input id="pitchcar-base" type="checkbox" checked="true" onchange="togglePack(this)">
+        <input id="pitchcar-base" type="checkbox" checked="checked" onchange="togglePack(this)">
         <label for="pitchcar-base">PitchCar</label>
+        <input id="pitchcar-addon1" type="checkbox" onchange="togglePack(this)">
+        <label for="pitchcar-addon1">Addon 1</label>
+        <input id="pitchcar-addon1b" type="checkbox" onchange="togglePack(this)">
+        <label for="pitchcar-addon1b">L'Extension</label>
     </div>
 </div>
 <div id="canvas"></div>

@@ -157,8 +157,13 @@ class Canvas {
                 switch (type) {
                     case "xstraight":
                     case "ystraight":
+                    case "cstraight":
                     case "start":
                         trackType = "straight";
+                        break;
+                    case "ccurve":
+                        trackType = "curve";
+                        break;
                 }
                 var group = new Konva.Group({
                     x: x,
@@ -231,6 +236,8 @@ class Canvas {
                         group.add(snapBottom);
                         break;
                     }
+                    case "straightEnd":
+                    case "jump":
                     case "rampEnd": //TODO: maybe make the rampEnd hitbox smaller?
                     case "ramp": {
                         let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
@@ -277,6 +284,26 @@ class Canvas {
                 "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve"
             ],
             enabled: true,
+        },
+        {
+            id: "pitchcar-addon1",
+            tiles: [
+                "ccurve", "ccurve", "ccurve", "ccurve",
+                "straightEnd", "straightEnd",
+                "cstraight",
+                "jump", "jump",
+                "bridge", "tunnel"
+            ],
+            enabled: false,
+        },
+        {
+            id: "pitchcar-addon1b",
+            tiles: [
+                "ccurve", "ccurve", "ccurve", "ccurve",
+                "straightEnd", "straightEnd",
+                "cstraight", "cstraight",
+            ],
+            enabled: false,
         },
     ];
 

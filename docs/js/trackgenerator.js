@@ -4,6 +4,7 @@ class Trackgenerator {
     availableTracktypes = {};
     usedTiles = {};
     usedTracktypes = {};
+
     randomIndex(arr) {
         return Math.floor(Math.random() * arr.length);
     }
@@ -181,8 +182,12 @@ class Trackgenerator {
         this.availableTracktypes = {};
         for (let i in Global.tiles) {
             let tile = Global.tiles[i];
-            let type = tile.attrs.trackType;
-            switch (type) {
+            let trackType = tile.attrs.trackType;
+            switch (trackType) {
+                case "jump":
+                case "bridge":
+                case "tunnel":
+                case "straightEnd":
                 case "ramp":
                 case "rampEnd":
                     //TODO: add ramp
@@ -191,12 +196,12 @@ class Trackgenerator {
                     this.availableTiles.push({
                         index: i,
                         type: tile.attrs.type,
-                        trackType: type
+                        trackType: trackType
                     });
-                    if (this.availableTracktypes[type]) {
-                        this.availableTracktypes[type]++;
+                    if (this.availableTracktypes[trackType]) {
+                        this.availableTracktypes[trackType]++;
                     } else {
-                        this.availableTracktypes[type] = 1;
+                        this.availableTracktypes[trackType] = 1;
                     }
                     break;
             }
