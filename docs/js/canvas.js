@@ -195,7 +195,7 @@ class Canvas {
                 });
 
                 group.on("dragstart", () => {
-                    if (!Global.forceShowSnapzones)
+                    if (!Global.forceShowSnapzones && !Global.disableSnapping)
                         base.toggleSnapzones(true);
                     base.removeSnap(group);
                 });
