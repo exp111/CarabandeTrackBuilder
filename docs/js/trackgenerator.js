@@ -184,15 +184,8 @@ class Trackgenerator {
             let tile = Global.tiles[i];
             let trackType = tile.attrs.trackType;
             switch (trackType) {
-                case "jump":
-                case "bridge":
-                case "tunnel":
-                case "straightEnd":
-                case "ramp":
-                case "rampEnd":
-                    //TODO: add ramp
-                    break;
-                default:
+                case "straight":
+                case "curve":
                     this.availableTiles.push({
                         index: i,
                         type: tile.attrs.type,
@@ -203,6 +196,10 @@ class Trackgenerator {
                     } else {
                         this.availableTracktypes[trackType] = 1;
                     }
+                    break;
+                default:
+                    //TODO: add ramp
+                    //TODO: add curve
                     break;
             }
         }

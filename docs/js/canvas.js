@@ -1,4 +1,5 @@
 class Canvas {
+    static trackWidth = 52;
     static nobLength = 7;
     static snapZone = 10;
 
@@ -225,6 +226,7 @@ class Canvas {
                         offset: {x: w / 2, y: h / 2},
                     });
                 }
+
                 let snapZone = Canvas.snapZone;
 
                 switch (trackType) {
@@ -239,6 +241,13 @@ class Canvas {
                         let snapRight = createSnapzone(-snapZone + 5, -snapZone * 3 + 2, height, snapZone * 3, 90);
                         group.add(snapRight);
                         let snapBottom = createSnapzone(-width / 2 - snapZone - 3, height / 2 - snapZone * 2, width, snapZone * 3);
+                        group.add(snapBottom);
+                        break;
+                    }
+                    case "curve45": { //FIXME: these seem a bit off when snapped to non 45 deg curves
+                        let snapRight = createSnapzone(-snapZone * 2 - 4, -snapZone * 3 + 3, Canvas.trackWidth + snapZone * 2, snapZone * 3, 45);
+                        group.add(snapRight);
+                        let snapBottom = createSnapzone(-width / 2 - snapZone, height / 2 - snapZone * 2, Canvas.trackWidth + snapZone * 2, snapZone * 3);
                         group.add(snapBottom);
                         break;
                     }
@@ -308,6 +317,15 @@ class Canvas {
                 "ccurve", "ccurve", "ccurve", "ccurve",
                 "straightEnd", "straightEnd",
                 "cstraight", "cstraight",
+            ],
+            enabled: false,
+        },
+        {
+            id: "pitchcar-addon2",
+            tiles: [
+                "curve45", "curve45", "curve45", "curve45",
+                "curve", "curve",
+                "straight", "straight",
             ],
             enabled: false,
         },
