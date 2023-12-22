@@ -256,6 +256,15 @@ class Canvas {
                         group.add(snapBottom);
                         break;
                     }
+                    case "upsilon": {
+                        let snapTopL = createSnapzone(-Canvas.trackWidth * 1.5 - snapZone - 3, -height / 2 - snapZone + 1, Canvas.trackWidth + snapZone * 2, snapZone * 3);
+                        group.add(snapTopL);
+                        let snapTopR = createSnapzone(Canvas.trackWidth/2 - snapZone+5, -height / 2 - snapZone + 1, Canvas.trackWidth + snapZone * 2, snapZone * 3);
+                        group.add(snapTopR);
+                        let snapBottom = createSnapzone(-Canvas.trackWidth / 2 - snapZone + 1, height / 2 - snapZone * 2, Canvas.trackWidth + snapZone * 2, snapZone * 3);
+                        group.add(snapBottom);
+                        break;
+                    }
                     case "cross": {
                         let snapTop = createSnapzone(-Canvas.trackWidth / 2 - snapZone, -height / 2 - snapZone, Canvas.trackWidth + snapZone * 2, snapZone * 3);
                         group.add(snapTop);
@@ -356,6 +365,13 @@ class Canvas {
             id: "pitchcar-addon5",
             tiles: [
                 "cross", "cross",
+            ],
+            enabled: false,
+        },
+        {
+            id: "pitchcar-addon6",
+            tiles: [
+                "upsilon", "upsilon",
             ],
             enabled: false,
         },
