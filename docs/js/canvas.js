@@ -257,9 +257,9 @@ class Canvas {
                         break;
                     }
                     case "upsilon": {
-                        let snapTopL = createSnapzone(-Canvas.trackWidth * 1.5 - snapZone - 3, -height / 2 - snapZone + 1, Canvas.trackWidth + snapZone * 2, snapZone * 3);
+                        let snapTopL = createSnapzone(-Canvas.trackWidth * 1.5 - snapZone - 3 + 13, -height / 2 - snapZone + 1, Canvas.trackWidth + snapZone * 2, snapZone * 3);
                         group.add(snapTopL);
-                        let snapTopR = createSnapzone(Canvas.trackWidth/2 - snapZone+5, -height / 2 - snapZone + 1, Canvas.trackWidth + snapZone * 2, snapZone * 3);
+                        let snapTopR = createSnapzone(Canvas.trackWidth / 2 - snapZone + 5 - 12, -height / 2 - snapZone + 1, Canvas.trackWidth + snapZone * 2, snapZone * 3);
                         group.add(snapTopR);
                         let snapBottom = createSnapzone(-Canvas.trackWidth / 2 - snapZone + 1, height / 2 - snapZone * 2, Canvas.trackWidth + snapZone * 2, snapZone * 3);
                         group.add(snapBottom);
