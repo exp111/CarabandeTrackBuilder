@@ -60,22 +60,26 @@ class Canvas {
         // mark snapzone as used so we cant double use a snap
         zone.attrs.snap = otherZone;
         otherZone.attrs.snap = zone;
-        // wed need to check if the other side can be snapped too (example: 3 pieces, middle one is replaced)
-        let ourOtherZone = group.children.find(c => c.attrs.tag == "snapzone" && c != zone);
+        // wed need to check if the other sides can be snapped too (example: 3 pieces, middle one is replaced)
+        let ourOtherZones = group.children.filter(c => c.attrs.tag == "snapzone" && c != zone);
         // first check if we have another snapzone
-        if (ourOtherZone != null) {
-            // then check every other group
+        if (ourOtherZones != null) {
+            // check every other group
             let otherTiles = Global.layer.children.filter(g => g != group && g != otherGroup);
-            let zonePos = ourOtherZone.absolutePosition();
-            for (let i in otherTiles) {
-                let otherTile = otherTiles[i];
-                // check if there is a snapzone that isnt snapped and contains our other snapzone origin
-                let found = otherTile.children.find(z => z.attrs.tag == "snapzone" && z.attrs.snap == null && this.isInside(z.getClientRect(), zonePos));
-                if (found) {
-                    // mark that one too
-                    found.attrs.snap = ourOtherZone;
-                    ourOtherZone.attrs.snap = found;
-                    break;
+            // for each zone check if the zone is inside another group
+            for (let i in ourOtherZones) {
+                let ourOtherZone = ourOtherZones[i];
+                let zonePos = ourOtherZone.absolutePosition();
+                for (let i in otherTiles) {
+                    let otherTile = otherTiles[i];
+                    // check if there is a snapzone that isnt snapped and contains our other snapzone origin
+                    let found = otherTile.children.find(z => z.attrs.tag == "snapzone" && z.attrs.snap == null && this.isInside(z.getClientRect(), zonePos));
+                    if (found) {
+                        // mark that one too
+                        found.attrs.snap = ourOtherZone;
+                        ourOtherZone.attrs.snap = found;
+                        break;
+                    }
                 }
             }
         }
@@ -252,6 +256,17 @@ class Canvas {
                         group.add(snapBottom);
                         break;
                     }
+                    case "cross": {
+                        let snapTop = createSnapzone(-Canvas.trackWidth / 2 - snapZone, -height / 2 - snapZone, Canvas.trackWidth + snapZone * 2, snapZone * 3);
+                        group.add(snapTop);
+                        let snapBottom = createSnapzone(-Canvas.trackWidth / 2 - snapZone, height / 2 - snapZone * 2, Canvas.trackWidth + snapZone * 2, snapZone * 3);
+                        group.add(snapBottom);
+                        let snapLeft = createSnapzone(-Canvas.trackWidth - snapZone * 3 + 2, -snapZone - 5, Canvas.trackWidth + snapZone * 2, snapZone * 3, 90);
+                        group.add(snapLeft);
+                        let snapRight = createSnapzone(Canvas.trackWidth / 2 - snapZone * 2 + 2, -snapZone - 5, Canvas.trackWidth + snapZone * 2, snapZone * 3, 90);
+                        group.add(snapRight);
+                        break;
+                    }
                     case "straightEnd":
                     case "jump":
                     case "rampEnd": //TODO: maybe make the rampEnd hitbox smaller?
@@ -334,6 +349,13 @@ class Canvas {
             id: "pitchcar-addon3",
             tiles: [
                 "long", "long",
+            ],
+            enabled: false,
+        },
+        {
+            id: "pitchcar-addon5",
+            tiles: [
+                "cross", "cross",
             ],
             enabled: false,
         },
