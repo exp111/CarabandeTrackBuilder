@@ -369,7 +369,7 @@ class Canvas {
             enabled: false,
         },
         {
-            id: "pitchcar-addon6",
+            id: "pitchcar-addon8",
             tiles: [
                 "upsilon", "upsilon",
             ],
