@@ -161,7 +161,7 @@ class Canvas {
         this.checkSnap(group);
     }
 
-    addTrack(type, url, x, y, packId, index) {
+    addTrack(type, url, x, y, packId, index, count) {
         let base = this;
         let promise = new Promise((resolve, reject) => {
             Konva.Image.fromURL(url, function (track) {
@@ -182,6 +182,7 @@ class Canvas {
                     y: y,
                     type: type,
                     pack: packId,
+                    count: count,
                     trackType: trackType,
                     draggable: true,
                 });
@@ -306,6 +307,7 @@ class Canvas {
                 "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve"
             ],
             enabled: true,
+            count: 1
         },
         {
             id: "carabande-addon",
@@ -315,6 +317,7 @@ class Canvas {
                 "xstraight", "ystraight",
             ],
             enabled: true,
+            count: 1
         },
         {
             id: "pitchcar-base",
@@ -324,6 +327,7 @@ class Canvas {
                 "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve", "curve"
             ],
             enabled: true,
+            count: 1
         },
         {
             id: "pitchcar-addon1",
@@ -335,6 +339,7 @@ class Canvas {
                 "bridge", "tunnel"
             ],
             enabled: false,
+            count: 1
         },
         {
             id: "pitchcar-addon1b",
@@ -344,6 +349,7 @@ class Canvas {
                 "cstraight", "cstraight",
             ],
             enabled: false,
+            count: 1
         },
         {
             id: "pitchcar-addon2",
@@ -353,6 +359,7 @@ class Canvas {
                 "straight", "straight",
             ],
             enabled: false,
+            count: 1
         },
         {
             id: "pitchcar-addon3",
@@ -360,6 +367,7 @@ class Canvas {
                 "long", "long",
             ],
             enabled: false,
+            count: 1
         },
         {
             id: "pitchcar-addon5",
@@ -367,6 +375,7 @@ class Canvas {
                 "cross", "cross",
             ],
             enabled: false,
+            count: 1
         },
         {
             id: "pitchcar-addon8",
@@ -374,24 +383,47 @@ class Canvas {
                 "upsilon", "upsilon",
             ],
             enabled: false,
+            count: 1
         },
     ];
 
 
-    togglePack(id, val) {
+    togglePack(id, enabled) {
         let pack = this.packs.find(p => p.id == id);
-        pack.enabled = val;
+        pack.enabled = enabled;
         if (pack.enabled) {
             // add them
-            Promise.all(this.addTracks(pack, Global.tiles.length)).then(() => this.resetTracks(pack));
+            for (let count = 0; count < pack.count; count++) {
+                Promise.all(this.addTracks(pack, Global.tiles.length, count)).then(() => this.resetTracks(pack));
+            }
         } else {
             this.removeTracks(pack);
         }
     }
 
-    addPreset(track, packId, index) {
+    changePackCount(id, count) {
+        let pack = this.packs.find(p => p.id == id);
+        let difference = count - pack.count;
+        let original = pack.count;
+        pack.count = count;
+        // only do smth if pack is enabled
+        if (pack.enabled) {
+            // need to add some
+            if (difference > 0) {
+                for (let c = count - difference; c < pack.count; c++) {
+                    Promise.all(this.addTracks(pack, Global.tiles.length, c)).then(() => this.resetTracks(pack));
+                }
+            } else if (difference < 0) {
+                for (let c = original + difference; c < original; c++) {
+                    this.removeTracks(pack, c);
+                }
+            }
+        }
+    }
+
+    addPreset(track, packId, index, count) {
         let url = `assets/${track}.png`;
-        return this.addTrack(track, url, 0, 0, packId, index);
+        return this.addTrack(track, url, 0, 0, packId, index, count);
     }
 
     initPresets(baseID) {
@@ -405,7 +437,7 @@ class Canvas {
                 if (baseID != null && !pack.id.startsWith(baseID))
                     continue;
 
-                let packPromises = this.addTracks(pack, index);
+                let packPromises = this.addTracks(pack, index, 0);
                 index += packPromises.length;
                 promises.push(packPromises);
             }
@@ -415,22 +447,23 @@ class Canvas {
         });
     }
 
-    addTracks(pack, index) {
+    addTracks(pack, index, count) {
         let promises = [];
         for (let j in pack.tiles) {
             let tile = pack.tiles[j];
-            promises.push(this.addPreset(tile, pack.id, index));
+            promises.push(this.addPreset(tile, pack.id, index, count));
             index++;
         }
         return promises;
     }
 
-    removeTracks(pack) {
+    removeTracks(pack, count = null) {
         let toRemove = [];
         for (let i in Global.tiles) {
             let tile = Global.tiles[i];
             // if we have a pack id, check for that
-            if (pack != null && pack.id != tile.attrs.pack)
+            if ((pack != null && pack.id != tile.attrs.pack) ||
+                (count != null && pack.count != tile.attrs.count))
                 continue;
             tile.remove();
             toRemove.push(tile);

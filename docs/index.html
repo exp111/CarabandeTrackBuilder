@@ -34,28 +34,36 @@
         <option value="carabande" selected>Carabande</option>
         <option value="pitchcar">PitchCar</option>
     </select>
-    <!--TODO: allow multiple versions of one pack-->
     <div id="carabande">
         <input id="carabande-base" type="checkbox" checked="checked" onchange="togglePack(this)">
         <label for="carabande-base">Carabande</label>
+        <input id="carabande-base-count" type="number" style="width: 2rem" value="1" min="1" max="99" onchange="changePackCount(this)">
         <input id="carabande-addon" type="checkbox" checked="checked" onchange="togglePack(this)">
         <label for="carabande-addon">Action Set</label>
+        <input id="carabande-addon-count" type="number" style="width: 2rem" value="1" min="1" max="99" onchange="changePackCount(this)">
     </div>
     <div id="pitchcar" hidden="hidden">
         <input id="pitchcar-base" type="checkbox" checked="checked" onchange="togglePack(this)">
         <label for="pitchcar-base">PitchCar</label>
+        <input id="pitchcar-base-count" type="number" style="width: 2rem" value="1" min="1" max="99" onchange="changePackCount(this)">
         <input id="pitchcar-addon1b" type="checkbox" onchange="togglePack(this)">
         <label for="pitchcar-addon1b">L'Extension</label>
+        <input id="pitchcar-addon1b-count" type="number" style="width: 2rem" value="1" min="1" max="99" onchange="changePackCount(this)">
         <input id="pitchcar-addon1" type="checkbox" onchange="togglePack(this)">
         <label for="pitchcar-addon1">Extension 1</label>
+        <input id="pitchcar-addon1-count" type="number" style="width: 2rem" value="1" min="1" max="99" onchange="changePackCount(this)">
         <input id="pitchcar-addon2" type="checkbox" onchange="togglePack(this)">
         <label for="pitchcar-addon2">Extension 2</label>
+        <input id="pitchcar-addon2-count" type="number" style="width: 2rem" value="1" min="1" max="99" onchange="changePackCount(this)">
         <input id="pitchcar-addon3" type="checkbox" onchange="togglePack(this)">
         <label for="pitchcar-addon3">Extension 3</label>
+        <input id="pitchcar-addon3-count" type="number" style="width: 2rem" value="1" min="1" max="99" onchange="changePackCount(this)">
         <input id="pitchcar-addon5" type="checkbox" onchange="togglePack(this)">
         <label for="pitchcar-addon5">Extension 5</label>
+        <input id="pitchcar-addon5-count" type="number" style="width: 2rem" value="1" min="1" max="99" onchange="changePackCount(this)">
         <input id="pitchcar-addon8" type="checkbox" onchange="togglePack(this)">
         <label for="pitchcar-addon8">Extension 8</label>
+        <input id="pitchcar-addon8-count" type="number" style="width: 2rem" value="1" min="1" max="99" onchange="changePackCount(this)">
     </div>
 </div>
 <div id="canvas"></div>
@@ -146,6 +154,20 @@
             return;
         }
         Global.canvas.togglePack(id, checkbox.checked);
+    }
+
+    function changePackCount(input) {
+        let id = input.id;
+        if (id == null) {
+            console.error(`Unknown pack ${id}`);
+            return;
+        }
+        let packId = id.replaceAll("-count", "");
+        if (packId == null || packId == id) {
+            console.error(`Unknown pack ${packId}`);
+            return;
+        }
+        Global.canvas.changePackCount(packId, Number(input.value));
     }
 
     let select = document.getElementById("pack-selection");
