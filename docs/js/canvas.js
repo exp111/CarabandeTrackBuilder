@@ -474,6 +474,7 @@ class Canvas {
 
     resetTracks(pack = null) {
         //FIXME: if you do enable base+addon, then disable and enable base again they will overlap //instead reset all tracks inside the area
+        let highestY = 0;
         for (let i in Global.tiles) {
             let tile = Global.tiles[i];
             // if we have a pack id, check for that
@@ -481,9 +482,17 @@ class Canvas {
                 continue;
             let x = i % Canvas.tilesPerRow * (Canvas.presetRect.x2 - Canvas.presetRect.x1 / Canvas.tilesPerRow) + Canvas.presetRect.x1;
             let y = Math.floor(i / Canvas.tilesPerRow) * 100 + Canvas.presetRect.y1;
+            if (y > highestY) {
+                highestY = y;
+            }
             tile.rotation(0);
             tile.absolutePosition(new Vector(x, y));
             tile.children.filter(c => c.attrs.tag == "snapzone").forEach(z => z.attrs.snap = null);
+        }
+
+        // adjust canvas height if tiles are placed outside
+        if (highestY > Global.stage.height()) {
+            Global.stage.height(highestY + 100);
         }
     }
 }
