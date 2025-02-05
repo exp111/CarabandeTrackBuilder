@@ -109,6 +109,7 @@ class Canvas {
     }
 
 
+    //TODO: allow different type of snapzones as some parts cant be snapped together (expansion 6)
     checkSnap(group) {
         if (Global.disableSnapping)
             return;
@@ -238,6 +239,8 @@ class Canvas {
 
                 switch (trackType) {
                     case "long":
+                    case "multistraight1":
+                    case "multistraight2":
                     case "straight": {
                         let snapTop = createSnapzone(-width / 2 - snapZone, -height / 2 - snapZone, width + snapZone * 2, snapZone * 3);
                         group.add(snapTop);
@@ -382,7 +385,7 @@ class Canvas {
         {
             id: "pitchcar-addon6",
             tiles: [
-                "halfstraight", "halfcurve" // "", "multistraight1", "multistraight1", "multistraight2"
+                "halfstraight", "halfcurve", "multistraight1", "multistraight1", "multistraight2"
             ],
             enabled: false,
             count: 1
