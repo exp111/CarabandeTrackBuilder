@@ -385,7 +385,9 @@ class Canvas {
         {
             id: "pitchcar-addon6",
             tiles: [
-                "halfstraight", "halfcurve", "multistraight1", "multistraight1", "multistraight2"
+                "halfstraight", "halfcurve",
+                "multistraight1", "multistraight1", "multistraight2",
+                "multistraight_bridge", "multistraight_bridge", "multistraight_fill",
             ],
             enabled: false,
             count: 1
