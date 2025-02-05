@@ -170,9 +170,11 @@ class Canvas {
                     case "xstraight":
                     case "ystraight":
                     case "cstraight":
+                    case "halfstraight":
                     case "start":
                         trackType = "straight";
                         break;
+                    case "halfcurve":
                     case "ccurve":
                         trackType = "curve";
                         break;
@@ -373,6 +375,14 @@ class Canvas {
             id: "pitchcar-addon5",
             tiles: [
                 "cross", "cross",
+            ],
+            enabled: false,
+            count: 1
+        },
+        {
+            id: "pitchcar-addon6",
+            tiles: [
+                "halfstraight", "halfcurve" // "", "multistraight1", "multistraight1", "multistraight2"
             ],
             enabled: false,
             count: 1
