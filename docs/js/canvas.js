@@ -262,6 +262,11 @@ class Canvas {
                         group.add(snapBottom);
                         break;
                     }
+                    case "fcurve": {
+                        let snapRight = createSnapzone(-snapZone + 5.5, -snapZone * 3 - 2, Canvas.trackWidth + snapZone * 2, snapZone * 3, 90);
+                        group.add(snapRight);
+                        break;
+                    }
                     case "upsilon": {
                         let snapTopL = createSnapzone(-Canvas.trackWidth * 1.5 - snapZone - 3 + 13, -height / 2 - snapZone + 1, Canvas.trackWidth + snapZone * 2, snapZone * 3);
                         group.add(snapTopL);
@@ -360,7 +365,7 @@ class Canvas {
             id: "pitchcar-addon2",
             tiles: [
                 "curve45", "curve45", "curve45", "curve45",
-                "curve", "curve",
+                "fcurve", "fcurve",
                 "straight", "straight",
             ],
             enabled: false,

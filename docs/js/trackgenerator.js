@@ -225,6 +225,7 @@ class Trackgenerator {
                     //TODO: add ramp
                     //TODO: add curve45
                     //TODO: add cross?
+                    //TODO: add flat curve?
                     break;
             }
         }
